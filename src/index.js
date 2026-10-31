@@ -106,7 +106,7 @@ export default {
       if (!q) return json({ error: "Enter something to search." }, 400);
       try {
         // Use Hindi Wikipedia for Devanagari queries; English otherwise.
-        const lang = /[\\u0900-\\u097F]/.test(q) ? "hi" : "en";
+        const lang = /[\u0900-\u097F]/.test(q) ? "hi" : "en";
         const searchURL = new URL("https://" + lang + ".wikipedia.org/w/api.php");
         searchURL.search = new URLSearchParams({
           action: "opensearch", search: q, limit: "5", namespace: "0", format: "json"
