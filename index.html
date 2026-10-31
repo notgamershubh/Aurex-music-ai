@@ -253,7 +253,7 @@ const scenes=board.scenes||[];if(scenes.length<2)throw Error("The AI returned to
 const frames=[];
 for(let i=0;i<scenes.length;i++){
 btn.textContent="Creating scene "+(i+1)+"/"+scenes.length+"…";status.textContent="Generating AI artwork for scene "+(i+1)+" of "+scenes.length+"…";
-const d=await requestJSON(API_BASE+"/api/ai/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:scenes[i].image_prompt})});
+const d=await requestJSON(API_BASE+"/api/ai/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:scenes[i].image_prompt,enhance:false})});
 if(!d.dataURI)throw Error("Image generation failed on scene "+(i+1)+".");
 const img=new Image();img.src=d.dataURI;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Could not load scene "+(i+1)+"."))});frames.push({img,motion:scenes[i].motion,title:scenes[i].title});
 }
