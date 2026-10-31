@@ -104,11 +104,13 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:26px}
 <button id="recordBtn" disabled>Record video</button>
 <button id="stopBtn" class="secondary" disabled>Stop</button>
 </div>
+<div class="buttons"><button id="aiVideoBtn" class="secondary" type="button">✦ Generate AI video (4 scenes)</button></div>
+<p class="small">AI video builds a cinematic WebM from AI-generated scene images with animated camera motion. Load a song first to include its audio.</p>
 
 <div class="meter"><span id="meterFill"></span></div>
 <div class="status"><span id="trackInfo">No track loaded</span><span id="timeInfo">00:00 / 00:00</span></div>
 
-<div class="note"><b>Current version:</b> creates procedural audio-reactive visuals and connects to the Worker for an editing-plan response. It does not generate new AI video clips. Video export uses WebM.</div>
+<div class="note"><b>AI video mode:</b> generates four scene images from your prompt, animates them with camera movement, and exports a WebM. Load a music track to include audio. This uses AI artwork + animation rather than a native text-to-video model.</div>
 </section>
 
 <section class="panel">
@@ -132,6 +134,7 @@ const W = canvas.width, H = canvas.height;
 let audioCtx = null, source = null, analyser = null, data = null;
 let audioEl = null, recorder = null, chunks = [], stream = null, endTimer = null;
 let beatLevel = 0;
+let aiFrames = null, aiVideoStart = 0, aiVideoDuration = 12000;
 
 const palettes = {
 cinematic:['#080711','#25143b','#d6b46a','#b3a0ff'],
@@ -155,6 +158,20 @@ function getPalette(){return palettes[$('style').value] || palettes.cinematic;}
 
 function draw(now=0){
 const p = getPalette();
+if(aiFrames && aiFrames.length){
+const elapsed=Math.max(0,now-aiVideoStart),sceneMs=aiVideoDuration/aiFrames.length;
+const idx=Math.min(aiFrames.length-1,Math.floor(elapsed/sceneMs)),local=(elapsed%sceneMs)/sceneMs,frame=aiFrames[idx],img=frame.img;
+ctx.fillStyle="#050505";ctx.fillRect(0,0,W,H);
+const scale=1.03+local*.11,iw=W*scale,ih=H*scale,dx=(W-iw)/2,dy=(H-ih)/2;
+ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
+if(frame.motion==="pan-left")ctx.drawImage(img,dx-local*36,dy,iw,ih);
+else if(frame.motion==="pan-right")ctx.drawImage(img,dx+local*36,dy,iw,ih);
+else if(frame.motion==="rise")ctx.drawImage(img,dx,dy-local*28,iw,ih);
+else ctx.drawImage(img,dx,dy,iw,ih);
+const shade=ctx.createLinearGradient(0,H*.55,0,H);shade.addColorStop(0,"#00000000");shade.addColorStop(1,"#00000088");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
+ctx.fillStyle="#fff";ctx.font="600 24px system-ui";ctx.textAlign="left";ctx.fillText(frame.title||("SCENE "+(idx+1)),44,H-45);
+ctx.restore();requestAnimationFrame(draw);return;
+}
 const energy = analyser && data
 ? (analyser.getByteFrequencyData(data),data.reduce((a,b)=>a+b,0)/(data.length*255))
 : 0.06;
@@ -220,6 +237,52 @@ const title=$('prompt').value.trim().split(/[,.!]/)[0].slice(0,60);
 ctx.fillText(title||'AUREX MUSIC VISUAL',W/2,H*.88);
 ctx.globalAlpha=1;
 requestAnimationFrame(draw);
+}
+
+async function generateAIVideo(){
+const btn=$("aiVideoBtn"),status=$("stateInfo"),prompt=$("prompt").value.trim();
+if(!prompt){status.textContent="Enter a scene prompt first.";return;}
+if(!window.MediaRecorder||!canvas.captureStream){status.textContent="Video recording is not supported in this browser.";return;}
+btn.disabled=true;btn.textContent="Generating scenes…";
+let stream=null,audioStream=null;
+try{
+const requestJSON=async(url,options)=>{const r=await fetch(url,{...options,signal:AbortSignal.timeout(120000)});let d;try{d=await r.json()}catch{throw Error("Unreadable AI response (HTTP "+r.status+").")}if(!r.ok)throw Error(d.error||("Request failed (HTTP "+r.status+")."));return d};
+status.textContent="Planning 4 scenes…";
+const board=await requestJSON(API_BASE+"/api/ai/video-scenes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:prompt+"; visual style: "+$("style").value})});
+const scenes=board.scenes||[];if(scenes.length<2)throw Error("The AI returned too few scenes.");
+const frames=[];
+for(let i=0;i<scenes.length;i++){
+btn.textContent="Creating scene "+(i+1)+"/"+scenes.length+"…";status.textContent="Generating AI artwork for scene "+(i+1)+" of "+scenes.length+"…";
+const d=await requestJSON(API_BASE+"/api/ai/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:scenes[i].image_prompt})});
+if(!d.dataURI)throw Error("Image generation failed on scene "+(i+1)+".");
+const img=new Image();img.src=d.dataURI;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Could not load scene "+(i+1)+"."))});frames.push({img,motion:scenes[i].motion,title:scenes[i].title});
+}
+const durationValue=$("duration").value;
+let totalMs=12000;
+if(audioEl&&isFinite(audioEl.duration)&&audioEl.duration>0)totalMs=durationValue==="full"?Math.min(audioEl.duration*1000,300000):Math.min(Number(durationValue)*1000,audioEl.duration*1000);
+else if(durationValue!=="full")totalMs=Number(durationValue)*1000;
+aiFrames=frames;aiVideoDuration=totalMs;aiVideoStart=performance.now();
+stream=canvas.captureStream(30);
+if(audioEl&&audioCtx&&analyser){
+audioStream=audioCtx.createMediaStreamDestination();analyser.connect(audioStream);
+audioStream.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+await audioCtx.resume();audioEl.pause();audioEl.currentTime=0;
+}
+const mime=MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")?"video/webm;codecs=vp9,opus":"video/webm";
+const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000}),chunks=[];
+const stopped=new Promise((resolve,reject)=>{recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onerror=()=>reject(Error("Browser video recording failed."));recorder.onstop=()=>resolve(new Blob(chunks,{type:"video/webm"}))});
+recorder.start(500);if(audioEl)await audioEl.play().catch(()=>{});
+status.textContent="Rendering "+Math.round(totalMs/1000)+" seconds of AI video… keep this tab open.";
+await new Promise(resolve=>setTimeout(resolve,totalMs));
+recorder.stop();const blob=await stopped;aiFrames=null;
+if(audioEl)audioEl.pause();
+if(audioStream){try{analyser.disconnect(audioStream)}catch{}audioStream.getTracks().forEach(t=>t.stop())}
+stream.getTracks().forEach(t=>t.stop());
+if(!blob.size)throw Error("No video data was recorded.");
+const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="aurex-ai-music-video.webm";a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+status.textContent="AI video exported! Check your downloads.";
+}catch(error){aiFrames=null;status.textContent="Video generation failed: "+error.message}
+finally{if(stream)stream.getTracks().forEach(t=>t.stop());btn.disabled=false;btn.textContent="✦ Generate AI video (4 scenes)"}
 }
 
 async function generateEditingPlan(){
@@ -408,6 +471,7 @@ if(audioEl)audioEl.pause();
 }
 
 $('aiBtn').addEventListener('click',generateEditingPlan);
+$('aiVideoBtn').addEventListener('click',generateAIVideo);
 $('loadBtn').addEventListener('click',loadTrack);
 $('playBtn').addEventListener('click',()=>{
 if(!audioEl)return;
