@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AUREX AI</title>
+<style>
+:root{color-scheme:dark;--bg:#08090d;--panel:#11131b;--gold:#d6b46a;--text:#f4f1e8;--muted:#a4a7b4;--line:#292d3a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#191629 0,#08090d 55%);color:var(--text);font:15px/1.5 system-ui,Arial,sans-serif;min-height:100vh}
+header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{font-weight:900;letter-spacing:.15em;color:var(--gold);font-size:21px}.muted{color:var(--muted);font-size:12px}
+a{color:var(--gold)}main{max-width:1100px;margin:auto;padding:24px 16px 48px}.hero h1{font-size:clamp(27px,5vw,42px);margin:0}.hero p{color:var(--muted);margin:7px 0 20px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button,.secondary{background:#202331;color:var(--text);border:1px solid #35394a}
+button{border:0;border-radius:10px;padding:11px 14px;background:var(--gold);color:#17130a;font-weight:750;cursor:pointer;font:inherit}button:disabled{opacity:.5;cursor:wait}
+.tabs button.active{background:var(--gold);color:#17130a;border-color:var(--gold)}
+.panel{background:linear-gradient(180deg,var(--panel),#0d0f15);border:1px solid var(--line);border-radius:17px;padding:16px;min-width:0}
+#chat{height:min(52vh,520px);min-height:280px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px 14px}
+.msg{padding:12px 14px;border-radius:14px;max-width:90%;white-space:pre-wrap;overflow-wrap:anywhere}.assistant{background:#1a1d28;border:1px solid #2b3040;align-self:flex-start}.user{background:#302817;border:1px solid #5d4a27;align-self:flex-end}
+.composer{display:flex;gap:8px;margin-top:12px;align-items:stretch}.composer textarea,textarea,input{width:100%;background:#090b11;color:var(--text);border:1px solid #343949;border-radius:11px;padding:12px;font:inherit}.composer textarea{resize:vertical;min-height:54px;max-height:180px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.status{font-size:12px;color:var(--muted);margin-top:9px;min-height:18px}
+.hidden{display:none!important}.searchResult{padding:12px 0;border-bottom:1px solid var(--line)}.searchResult:last-child{border:0}.searchResult p{margin:5px 0;color:var(--muted);font-size:13px}
+#imageOut img{display:block;max-width:100%;max-height:600px;border-radius:12px;margin-top:14px}footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+@media(max-width:560px){header{padding:15px}.composer{flex-wrap:wrap}.composer button{flex:1}.msg{max-width:96%}.panel{padding:12px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">AUREX AI</div><div class="muted">Your AI workspace · Chat · Search · Images</div></div><a href="./index.html">AUREX Music Studio ↗</a></header>
+<main>
+<section class="hero"><h1>What can we create today?</h1><p>Chat karo, coding help lo, web search karo ya image generate karo.</p></section>
+<div class="tabs">
+<button class="active" data-tab="chatPanel">💬 Chat</button>
+<button class="secondary" data-tab="searchPanel">🔎 Search</button>
+<button class="secondary" data-tab="imagePanel">🎨 Image</button>
+</div>
+<section class="panel" id="chatPanel">
+<div id="chat" aria-live="polite"><div class="msg assistant">Namaste! Main AUREX AI hoon. Mujhse kuch bhi poochho ya code likhwao. Internet search ke liye Search tab use karo.</div></div>
+<div class="composer"><textarea id="prompt" placeholder="Message AUREX AI… (Enter to send, Shift+Enter for new line)"></textarea><button id="mic" class="secondary" title="Voice input">🎙️</button><button id="send">Send ➤</button></div>
+<div class="tools"><button id="newChat" class="secondary">New chat</button><button id="clearHistory" class="secondary">Clear saved history</button><span class="muted">Double-click an AI reply to read it aloud.</span></div>
+<div class="status" id="chatStatus" role="status"></div>
+</section>
+<section class="panel hidden" id="searchPanel">
+<h2>Internet search</h2><form id="searchForm"><div class="composer"><input id="searchQuery" placeholder="Search a topic…" required><button>Search</button></div></form>
+<div id="searchStatus" class="status"></div><div id="searchResults"></div>
+<p class="muted">Search results are from Wikipedia's public search service; this is not a full web-wide search engine.</p>
+</section>
+<section class="panel hidden" id="imagePanel">
+<h2>AI Image Generator</h2><p class="muted">Apni image ka description likho. Generation model availability aur free usage limits par depend karti hai.</p>
+<form id="imageForm"><textarea id="imagePrompt" placeholder="Example: cinematic Minecraft castle at sunset, blocky game world, dramatic lighting" required maxlength="1000"></textarea><div class="tools"><button id="imageButton">Generate image</button></div></form>
+<div id="imageStatus" class="status"></div><div id="imageOut"></div>
+</section>
+<footer>AUREX AI · Free-tier availability and limits may vary · Chat history is stored in this browser only.</footer>
+</main>
+<script>
+const API = "https://aurex-music-ai.factoshubh1080p.workers.dev/api/ai";
+const chatEl = document.getElementById("chat"), promptEl = document.getElementById("prompt");
+const chatStatus = document.getElementById("chatStatus");
+let messages = [];
+try { messages = JSON.parse(localStorage.getItem("aurex_ai_history") || "[]"); if (!Array.isArray(messages)) messages=[]; } catch { messages=[]; }
+function saveHistory(){try{localStorage.setItem("aurex_ai_history",JSON.stringify(messages.slice(-60)))}catch{}}
+function addMessage(role, content, save=true){
+ const el=document.createElement("div");el.className="msg "+role;el.textContent=content;
+ if(role==="assistant") el.title="Double-click to read aloud";
+ if(role==="assistant") el.addEventListener("dblclick",()=>{if("speechSynthesis" in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(content));}});
+ chatEl.appendChild(el);chatEl.scrollTop=chatEl.scrollHeight;
+ if(save){messages.push({role,content});saveHistory();}
+}
+function renderHistory(){chatEl.innerHTML="";if(!messages.length){const el=document.createElement("div");el.className="msg assistant";el.textContent="Namaste! Main AUREX AI hoon. Mujhse kuch bhi poochho ya code likhwao.";chatEl.appendChild(el);return;}messages.forEach(m=>{const el=document.createElement("div");el.className="msg "+m.role;el.textContent=m.content;if(m.role==="assistant")el.addEventListener("dblclick",()=>{if("speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(m.content));}});chatEl.appendChild(el);});chatEl.scrollTop=chatEl.scrollHeight;}
+renderHistory();
+document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("[data-tab]").forEach(b=>{b.classList.toggle("active",b===btn);b.classList.toggle("secondary",b!==btn)});["chatPanel","searchPanel","imagePanel"].forEach(id=>document.getElementById(id).classList.toggle("hidden",id!==btn.dataset.tab));}));
+async function sendMessage(){
+ const text=promptEl.value.trim();if(!text)return;
+ promptEl.value="";addMessage("user",text);chatStatus.textContent="AUREX AI is thinking…";document.getElementById("send").disabled=true;
+ try{
+  const response=await fetch(API+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:messages.slice(-12)})});
+  const data=await response.json();if(!response.ok)throw new Error(data.error||"Request failed");
+  addMessage("assistant",data.reply||"No reply received.");
+ }catch(e){chatStatus.textContent="Error: "+e.message+" (Worker/model limit ya configuration check karo.)";}finally{document.getElementById("send").disabled=false;if(!chatStatus.textContent.startsWith("Error:"))chatStatus.textContent="Ready";}
+}
+document.getElementById("send").addEventListener("click",sendMessage);
+promptEl.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}});
+document.getElementById("newChat").addEventListener("click",()=>{messages=[];saveHistory();renderHistory();chatStatus.textContent="New chat started.";});
+document.getElementById("clearHistory").addEventListener("click",()=>{if(confirm("Is browser mein saved AUREX AI chat history delete karein?")){messages=[];saveHistory();renderHistory();chatStatus.textContent="Saved history cleared.";}});
+
+document.getElementById("searchForm").addEventListener("submit",async e=>{
+ e.preventDefault();const q=document.getElementById("searchQuery").value.trim();const status=document.getElementById("searchStatus"),out=document.getElementById("searchResults");out.innerHTML="";status.textContent="Searching…";
+ try{const r=await fetch(API+"/search?q="+encodeURIComponent(q));const d=await r.json();if(!r.ok)throw new Error(d.error||"Search failed");if(!d.results?.length){status.textContent="No results found.";return;}
+ d.results.forEach(item=>{const div=document.createElement("div");div.className="searchResult";const a=document.createElement("a");a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent=item.title;const p=document.createElement("p");p.textContent=item.description||"No summary available.";div.append(a,p);out.appendChild(div);});status.textContent="Found "+d.results.length+" results.";}catch(err){status.textContent="Search error: "+err.message;}
+});
+document.getElementById("imageForm").addEventListener("submit",async e=>{
+ e.preventDefault();const prompt=document.getElementById("imagePrompt").value.trim();const status=document.getElementById("imageStatus"),out=document.getElementById("imageOut"),btn=document.getElementById("imageButton");if(!prompt)return;
+ btn.disabled=true;status.textContent="Generating image…";out.innerHTML="";
+ try{const r=await fetch(API+"/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Image generation failed");const img=document.createElement("img");img.src=d.dataURI;img.alt=prompt;out.appendChild(img);const link=document.createElement("a");link.href=d.dataURI;link.download="aurex-ai-image.jpg";link.textContent="Open / save image";out.appendChild(link);status.textContent="Image generated.";}catch(err){status.textContent="Image error: "+err.message;}finally{btn.disabled=false;}
+});
+document.getElementById("mic").addEventListener("click",()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){chatStatus.textContent="Voice input is not supported in this browser. Try Chrome.";return;}
+ const recognition=new SR();recognition.lang="hi-IN";recognition.interimResults=false;recognition.onresult=e=>{promptEl.value+=(promptEl.value?" ":"")+e.results[0][0].transcript;promptEl.focus();};recognition.onerror=e=>chatStatus.textContent="Voice input error: "+e.error;recognition.start();chatStatus.textContent="Listening…";
+});
+</script>
+</body>
+</html>
