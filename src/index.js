@@ -169,7 +169,7 @@ export default {
       if (!prompt || prompt.length > 1000) return json({ error: "Enter an image prompt under 1000 characters." }, 400);
       try {
         let enhancedPrompt = prompt;
-        try {
+        if (body?.enhance !== false) try {
           const enhancement = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
             messages: [
               { role: "system", content: "You are an expert text-to-image art director. Rewrite the user's idea as one vivid, precise image-generation prompt. Preserve the subject and intent. Add strong composition, lighting, depth, material detail, coherent color palette, anatomy/object accuracy, and professional art direction. If the user asks for a logo, prioritize clean shapes, readable lettering, and a centered icon. Avoid contradictory instructions. Return only the prompt, no explanations, no quotes, no negative prompt." },
