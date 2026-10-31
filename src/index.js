@@ -195,7 +195,7 @@ export default {
     return json({
       app: "AUREX Music AI",
       status: "online",
-      endpoints: ["/api/health", "/api/generate", "/api/ai/chat", "/api/ai/search", "/api/ai/image"]
+      endpoints: ["/api/health", "/api/generate", "/api/ai/chat", "/api/ai/search", "/api/ai/image", "/api/ai/video-scenes"]
     });
   }
 };
