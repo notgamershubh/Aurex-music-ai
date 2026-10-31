@@ -26,8 +26,29 @@ async function chooseFile(file,kind){if(!file)return;if(file.size>2*1024*1024){$
 async function createPromptVideo(prompt,audioFile){
   const requestJSON=async(url,options)=>{const r=await fetch(url,{...options,signal:AbortSignal.timeout(120000)});let d;try{d=await r.json()}catch{throw Error("The AI service returned an unreadable response (HTTP "+r.status+").")}if(!r.ok)throw Error(d.error||("Request failed (HTTP "+r.status+")."));return d};
   $("status").textContent="Planning 4 scenes…";
-  const board=await requestJSON(API+"/ai/video-scenes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
-  const scenes=board.scenes||[];if(scenes.length<2)throw Error("The AI returned too few scenes.");
+  let scenes=[];
+  try {
+    const board=await requestJSON(API+"/ai/video-scenes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
+    scenes=Array.isArray(board.scenes)?board.scenes:[];
+    if(scenes.length<2)throw Error("Storyboard response contained too few scenes.");
+  } catch (storyboardError) {
+    console.warn("AUREX storyboard endpoint failed; using browser fallback:",storyboardError?.message||storyboardError);
+    const game=/minecraft|game|gaming|boss|battle|fight|esports/i.test(prompt);
+    const beats=[
+      ["Opening","wide establishing shot, atmospheric fog, dramatic backlighting, cinematic composition","slow-zoom"],
+      ["Build-up","dynamic medium-wide shot, rising tension, rich environmental details, strong depth","pan-left"],
+      ["Climax","powerful central action moment, energetic composition, glowing particles and dramatic contrast","pan-right"],
+      ["Finale","heroic final wide shot, glowing highlights, atmospheric depth, polished cinematic ending","rise"]
+    ];
+    scenes=beats.map(([title,detail,motion],i)=>({
+      title,
+      motion,
+      image_prompt:"Create scene "+(i+1)+" of a consistent cinematic video based on this idea: "+prompt+". "+
+        (game?"Use a detailed game-cinematic visual style, coherent game-world materials and consistent subject design. ":"Use professional cinematic art direction, coherent subject design and realistic materials. ")+
+        detail+". 16:9 widescreen framing, carefully composed foreground and background, detailed textures, volumetric lighting, crisp subject focus, controlled cinematic color grading. No text, captions, logos, watermarks or borders."
+    }));
+    $("status").textContent="Storyboard AI unavailable; using backup scene plan…";
+  }
   const frames=[];
   for(let i=0;i<scenes.length;i++){
     $("status").textContent="Creating AI scene "+(i+1)+" of "+scenes.length+"…";
