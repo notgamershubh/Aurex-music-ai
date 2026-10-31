@@ -130,7 +130,37 @@ export default {
       }
     }
 
-    // Text-to-image endpoint using Workers AI. Subject to model availability and free limits.
+    // Prompt-to-video storyboard: generates scene prompts; the browser renders them into an animated WebM.
+    if (url.pathname === "/api/ai/video-scenes") {
+      if (request.method !== "POST") return json({ error: "Use POST." }, 405);
+      if (!env.AI) return json({ error: "Workers AI binding is missing." }, 503);
+      const body = await readBody(request);
+      const prompt = String(body?.prompt || "").trim();
+      if (!prompt || prompt.length > 1000) return json({ error: "Enter a video prompt under 1000 characters." }, 400);
+      try {
+        const result = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+          messages: [
+            { role: "system", content: "You are a cinematic storyboard director. Return ONLY valid JSON, no markdown, with a scenes array of exactly 4 objects. Each object has: title (short), image_prompt (a detailed standalone visual prompt in English, 80-140 words), motion (one of slow-zoom, pan-left, pan-right, rise). Keep the same characters, world, and visual style consistent across all four scenes. Include composition, lighting, atmosphere, textures, depth, and camera lens. No text, logos, watermarks, or captions inside the generated images." },
+            { role: "user", content: "Create four sequential cinematic scenes for this video idea: " + prompt }
+          ],
+          max_tokens: 1100
+        });
+        let raw = String(result?.response || "").trim().replace(/^\`\`\`(?:json)?\s*/i, "").replace(/\s*\`\`\`$/, "");
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed.scenes) || parsed.scenes.length < 4) throw new Error("Storyboard did not contain four scenes.");
+        const scenes = parsed.scenes.slice(0, 4).map((scene, i) => ({
+          title: String(scene.title || ("Scene " + (i + 1))).slice(0, 80),
+          image_prompt: String(scene.image_prompt || prompt).slice(0, 1000),
+          motion: ["slow-zoom", "pan-left", "pan-right", "rise"].includes(scene.motion) ? scene.motion : "slow-zoom"
+        }));
+        return json({ ok: true, type: "storyboard", scenes });
+      } catch (error) {
+        console.error("AUREX video storyboard error:", error?.message || String(error));
+        return json({ error: "Could not create a video storyboard. Try a shorter prompt or check the free AI usage limit." }, 502);
+      }
+    }
+
+    // Text-to-image endpoint. First enriches the prompt, then generates with FLUX Schnell.
     if (url.pathname === "/api/ai/image") {
       if (request.method !== "POST") return json({ error: "Use POST." }, 405);
       if (!env.AI) return json({ error: "Workers AI binding is missing." }, 503);
@@ -138,9 +168,24 @@ export default {
       const prompt = String(body?.prompt || "").trim();
       if (!prompt || prompt.length > 1000) return json({ error: "Enter an image prompt under 1000 characters." }, 400);
       try {
-        const result = await env.AI.run("@cf/black-forest-labs/flux-1-schnell", { prompt, steps: 4 });
+        let enhancedPrompt = prompt;
+        try {
+          const enhancement = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+            messages: [
+              { role: "system", content: "You are an expert text-to-image art director. Rewrite the user's idea as one vivid, precise image-generation prompt. Preserve the subject and intent. Add strong composition, lighting, depth, material detail, coherent color palette, anatomy/object accuracy, and professional art direction. If the user asks for a logo, prioritize clean shapes, readable lettering, and a centered icon. Avoid contradictory instructions. Return only the prompt, no explanations, no quotes, no negative prompt." },
+              { role: "user", content: prompt }
+            ],
+            max_tokens: 220
+          });
+          if (typeof enhancement?.response === "string" && enhancement.response.trim()) {
+            enhancedPrompt = enhancement.response.trim().slice(0, 1800);
+          }
+        } catch (enhanceError) {
+          console.warn("AUREX prompt enhancement skipped:", enhanceError?.message || String(enhanceError));
+        }
+        const result = await env.AI.run("@cf/black-forest-labs/flux-1-schnell", { prompt: enhancedPrompt, steps: 4 });
         if (!result?.image) return json({ error: "Image model returned no image. Check model availability." }, 502);
-        return json({ dataURI: "data:image/jpeg;base64," + result.image });
+        return json({ dataURI: "data:image/jpeg;base64," + result.image, enhanced: enhancedPrompt !== prompt });
       } catch (error) {
         console.error("AUREX image error:", error?.message || String(error));
         return json({ error: "Image generation unavailable or free usage limit reached." }, 502);
