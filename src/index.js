@@ -145,7 +145,10 @@ export default {
           ],
           max_tokens: 1100
         });
-        let raw = String(result?.response || "").trim().replace(/^\`\`\`(?:json)?\s*/i, "").replace(/\s*\`\`\`$/, "");
+        let raw = String(result?.response || "").trim();
+        raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+        const start = raw.indexOf("{"), end = raw.lastIndexOf("}");
+        if (start >= 0 && end > start) raw = raw.slice(start, end + 1);
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed.scenes) || parsed.scenes.length < 4) throw new Error("Storyboard did not contain four scenes.");
         const scenes = parsed.scenes.slice(0, 4).map((scene, i) => ({
@@ -155,8 +158,21 @@ export default {
         }));
         return json({ ok: true, type: "storyboard", scenes });
       } catch (error) {
-        console.error("AUREX video storyboard error:", error?.message || String(error));
-        return json({ error: "Could not create a video storyboard. Try a shorter prompt or check the free AI usage limit." }, 502);
+        console.error("AUREX video storyboard error; using fallback scenes:", error?.message || String(error));
+        const looksGame = /minecraft|game|gaming|boss|battle|fight|esports/i.test(prompt);
+        const scenes = [
+          { title: "Opening", motion: "slow-zoom", detail: "wide establishing shot, atmospheric fog, dramatic backlighting, deep cinematic composition" },
+          { title: "Build-up", motion: "pan-left", detail: "medium-wide shot, rising tension, dynamic lighting, rich environmental details, strong depth" },
+          { title: "Climax", motion: "pan-right", detail: "powerful central moment, energetic composition, bright rim lighting, dramatic particles and contrast" },
+          { title: "Finale", motion: "rise", detail: "heroic final wide shot, glowing highlights, atmospheric depth, polished cinematic ending" }
+        ].map((scene, i) => ({
+          title: scene.title,
+          motion: scene.motion,
+          image_prompt: "Create scene " + (i + 1) + " of a consistent cinematic video based on this idea: " + prompt + ". " +
+            (looksGame ? "Use a high-quality game-cinematic visual style, detailed environments, consistent characters and believable game-world materials. " : "Use professional cinematic art direction, coherent subject design and realistic materials. ") +
+            scene.detail + ". 16:9 widescreen framing, carefully composed foreground and background, detailed textures, volumetric lighting, natural depth, crisp subject focus, rich but controlled color grading. Keep the visual style and main subject consistent with the other scenes. No text, captions, logos, watermarks or borders."
+        }));
+        return json({ ok: true, type: "storyboard", fallback: true, scenes });
       }
     }
 
