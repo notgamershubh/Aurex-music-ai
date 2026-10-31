@@ -105,16 +105,20 @@ export default {
       const q = (url.searchParams.get("q") || "").trim().slice(0, 180);
       if (!q) return json({ error: "Enter something to search." }, 400);
       try {
-        const searchURL = new URL("https://en.wikipedia.org/w/api.php");
+        // Use Hindi Wikipedia for Devanagari queries; English otherwise.
+        const lang = /[\\u0900-\\u097F]/.test(q) ? "hi" : "en";
+        const searchURL = new URL("https://" + lang + ".wikipedia.org/w/api.php");
         searchURL.search = new URLSearchParams({
           action: "opensearch", search: q, limit: "5", namespace: "0", format: "json"
         });
         const response = await fetch(searchURL.toString(), {
-          headers: { "User-Agent": "AUREXAI/1.0 (web search feature)" }
+          headers: { "User-Agent": "AUREXAI/1.0 (Wikipedia search)" },
+          signal: AbortSignal.timeout(12000)
         });
-        if (!response.ok) return json({ error: "Search provider unavailable." }, 502);
+        if (!response.ok) return json({ error: "Wikipedia search provider unavailable. Try again." }, 502);
         const data = await response.json();
         return json({
+          provider: lang === "hi" ? "Hindi Wikipedia" : "Wikipedia",
           results: (data[1] || []).map((title, i) => ({
             title,
             description: data[2]?.[i] || "",
