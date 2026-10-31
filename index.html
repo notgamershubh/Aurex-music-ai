@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,176 +6,419 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AUREX Music Studio</title>
 <style>
-:root{--bg:#08090d;--panel:#11131b;--panel2:#171a24;--gold:#d6b46a;--text:#f4f1e8;--muted:#a4a7b4;--line:#292d3a}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#171526 0,#08090d 55%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+:root{--bg:#08090d;--panel:#11131b;--gold:#d6b46a;--text:#f4f1e8;--muted:#a4a7b4;--line:#292d3a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#171526 0,#08090d 55%);color:var(--text);font:15px/1.5 system-ui,Arial,sans-serif}
 header{padding:26px max(20px,calc((100% - 1180px)/2));border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px}
-.brand{font-weight:900;letter-spacing:.13em;color:var(--gold);font-size:20px}.sub{color:var(--muted);font-size:12px}
-main{max-width:1180px;margin:auto;padding:26px 20px 60px}.hero{margin-bottom:22px}.hero h1{font-size:clamp(28px,4vw,44px);line-height:1.1;margin:0 0 10px}.hero p{color:var(--muted);max-width:720px;margin:0}
-.layout{display:grid;grid-template-columns:340px 1fr;gap:18px}.panel{background:linear-gradient(180deg,var(--panel),#0d0f15);border:1px solid var(--line);border-radius:18px;padding:18px;min-width:0}
-h2{font-size:16px;margin:0 0 14px}label{display:block;color:#d8d9e0;font-size:13px;margin:13px 0 6px}
-input[type=file],input[type=text],select,textarea{width:100%;border:1px solid #343949;background:#0a0c12;color:var(--text);padding:11px;border-radius:10px;font:inherit}
-textarea{min-height:94px;resize:vertical}input[type=range]{width:100%;accent-color:var(--gold)}
-button{border:0;border-radius:11px;padding:12px 15px;background:var(--gold);color:#17130a;font-weight:800;cursor:pointer;font:inherit}button.secondary{background:#222634;color:var(--text);border:1px solid #353a4b}button:disabled{opacity:.45;cursor:not-allowed}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.buttons button{flex:1}
+.brand{font-weight:900;letter-spacing:.13em;color:var(--gold);font-size:20px}
+.sub,.small{color:var(--muted);font-size:12px}
+main{max-width:1180px;margin:auto;padding:26px 20px 60px}
+.hero{margin-bottom:22px}
+.hero h1{font-size:clamp(28px,4vw,44px);line-height:1.1;margin:0 0 10px}
+.hero p{color:var(--muted);max-width:720px}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:18px}
+.panel{background:linear-gradient(180deg,var(--panel),#0d0f15);border:1px solid var(--line);border-radius:18px;padding:18px;min-width:0}
+h2{font-size:16px;margin:0 0 14px}
+label{display:block;color:#d8d9e0;font-size:13px;margin:13px 0 6px}
+input[type=file],select,textarea{width:100%;border:1px solid #343949;background:#0a0c12;color:var(--text);padding:11px;border-radius:10px;font:inherit}
+textarea{min-height:94px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--gold)}
+button{border:0;border-radius:11px;padding:12px 15px;background:var(--gold);color:#17130a;font-weight:800;cursor:pointer;font:inherit}
+button.secondary{background:#222634;color:var(--text);border:1px solid #353a4b}
+button:disabled{opacity:.45;cursor:not-allowed}
+.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.buttons button{flex:1}
 canvas{width:100%;display:block;background:#05060a;border-radius:13px;border:1px solid #282c39;aspect-ratio:16/9}
 .status{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin:10px 0 0;flex-wrap:wrap}
-.meter{height:5px;background:#242735;border-radius:10px;overflow:hidden;margin-top:12px}.meter span{display:block;height:100%;width:0;background:var(--gold);transition:width .1s}
+.meter{height:5px;background:#242735;border-radius:10px;overflow:hidden;margin-top:12px}
+.meter span{display:block;height:100%;width:0;background:var(--gold);transition:width .1s}
 .note{border:1px solid #4c422b;background:#19160f;color:#e4d2a5;padding:12px;border-radius:12px;font-size:12px;margin-top:14px}
-.small{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:4px 8px;border-radius:20px;border:1px solid var(--line);color:var(--muted);font-size:11px}
+.pill{display:inline-block;padding:4px 8px;border-radius:20px;border:1px solid var(--line);color:var(--muted);font-size:11px}
+.apiBox{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#0b0d13}
+.apiOutput{white-space:pre-wrap;overflow-wrap:anywhere;background:#080a10;border:1px solid #292d3a;border-radius:10px;padding:12px;color:#e6e2d6;min-height:54px;font:13px/1.5 monospace}
+.apiStatus{font-size:12px;color:var(--muted);margin-top:8px}
+.apiStatus.error{color:#ff9b9b}
+.apiStatus.ok{color:#a9e8b1}
 footer{color:var(--muted);font-size:12px;text-align:center;margin-top:26px}
 @media(max-width:800px){.layout{grid-template-columns:1fr}header{padding:20px}.panel{padding:15px}}
 </style>
 </head>
 <body>
-<header><div><div class="brand">AUREX <span style="color:#fff">MUSIC STUDIO</span></div><div class="sub">LOCAL • OPEN TOOLING • NO PAID API</div></div><span class="pill">MVP 0.1</span></header>
+<header>
+<div><div class="brand">AUREX <span style="color:#fff">MUSIC STUDIO</span></div>
+<div class="sub">LOCAL • OPEN TOOLING • NO PAID API</div></div>
+<span class="pill">MVP 0.2</span>
+</header>
+
 <main>
-<section class="hero"><h1>Turn sound into <span style="color:var(--gold)">moving visuals.</span></h1><p>Upload a track, describe the mood, and record a beat-reactive visual video. Your audio stays in your browser; nothing is uploaded to a server.</p></section>
+<section class="hero">
+<h1>Turn sound into <span style="color:var(--gold)">moving visuals.</span></h1>
+<p>Upload a track, describe the mood, generate an editing plan and record beat-reactive visuals. Your audio stays in your browser.</p>
+</section>
+
 <div class="layout">
 <section class="panel">
 <h2>Project settings</h2>
-<label for="audioFile">Audio track (MP3, WAV, etc.)</label><input id="audioFile" type="file" accept="audio/*">
-<label for="prompt">Scene prompt</label><textarea id="prompt" placeholder="Example: dark fantasy mountains, purple portals, golden particles, epic cinematic mood">Dark cinematic fantasy, purple atmosphere, golden particles, epic landscape</textarea>
-<label for="style">Visual style</label><select id="style">
-<option value="cinematic">Cinematic</option><option value="space">Cosmic / Space</option><option value="fantasy">Fantasy</option><option value="neon">Neon / EDM</option><option value="nature">Nature / Ambient</option><option value="minimal">Minimal abstract</option>
+
+<label for="audioFile">Audio track (MP3, WAV, etc.)</label>
+<input id="audioFile" type="file" accept="audio/*">
+
+<label for="prompt">Scene prompt</label>
+<textarea id="prompt">Dark cinematic fantasy, purple atmosphere, golden particles, epic landscape</textarea>
+
+<div class="apiBox">
+<h2>AUREX AI • Editing plan</h2>
+<p class="small">Send your prompt and settings to your Cloudflare Worker. Audio files are not sent.</p>
+<button id="aiBtn" type="button">Generate AI editing plan</button>
+<div id="apiStatus" class="apiStatus" role="status">Worker API: ready to test</div>
+<label>API response</label>
+<div id="apiOutput" class="apiOutput">Your editing plan will appear here.</div>
+</div>
+
+<label for="style">Visual style</label>
+<select id="style">
+<option value="cinematic">Cinematic</option>
+<option value="space">Cosmic / Space</option>
+<option value="fantasy">Fantasy</option>
+<option value="neon">Neon / EDM</option>
+<option value="nature">Nature / Ambient</option>
+<option value="minimal">Minimal abstract</option>
 </select>
-<label for="intensity">Beat effect intensity <span id="intensityVal">70%</span></label><input id="intensity" type="range" min="10" max="100" value="70">
-<label for="duration">Record duration</label><select id="duration"><option value="full">Until song ends</option><option value="30">30 seconds (test)</option><option value="60">60 seconds (test)</option><option value="120">2 minutes (test)</option></select>
-<div class="buttons"><button id="loadBtn">Load track</button><button id="playBtn" class="secondary" disabled>Play preview</button></div>
-<div class="buttons"><button id="recordBtn" disabled>Record video</button><button id="stopBtn" class="secondary" disabled>Stop</button></div>
+
+<label for="intensity">Beat effect intensity <span id="intensityVal">70%</span></label>
+<input id="intensity" type="range" min="10" max="100" value="70">
+
+<label for="duration">Record duration</label>
+<select id="duration">
+<option value="full">Until song ends</option>
+<option value="30">30 seconds (test)</option>
+<option value="60">60 seconds (test)</option>
+<option value="120">2 minutes (test)</option>
+</select>
+
+<div class="buttons">
+<button id="loadBtn">Load track</button>
+<button id="playBtn" class="secondary" disabled>Play preview</button>
+</div>
+<div class="buttons">
+<button id="recordBtn" disabled>Record video</button>
+<button id="stopBtn" class="secondary" disabled>Stop</button>
+</div>
+
 <div class="meter"><span id="meterFill"></span></div>
-<div class="status"><span id="trackInfo">No track loaded</span><span id="bpmInfo">BPM: —</span></div>
-<div class="note"><b>Current version:</b> visuals are generated procedurally from your prompt and style, then synchronized to audio energy. It does not yet generate AI video clips. Export uses browser-supported WebM; MP4 conversion can be added with FFmpeg in a backend/local build.</div>
+<div class="status"><span id="trackInfo">No track loaded</span><span id="timeInfo">00:00 / 00:00</span></div>
+
+<div class="note"><b>Current version:</b> creates procedural audio-reactive visuals and connects to the Worker for an editing-plan response. It does not generate new AI video clips. Video export uses WebM.</div>
 </section>
+
 <section class="panel">
 <h2>Live preview <span class="pill">16:9</span></h2>
 <canvas id="visual" width="1280" height="720"></canvas>
-<div class="status"><span id="stateInfo">Ready</span><span id="timeInfo">00:00 / 00:00</span></div>
-<p class="small">Tip: recording in real time takes the same amount of time as the selected duration. Keep this tab open while recording.</p>
+<div class="status"><span id="stateInfo">Ready</span><span id="previewTime">00:00 / 00:00</span></div>
+<p class="small">Recording takes real time. Keep this tab open until export finishes.</p>
 </section>
 </div>
-<footer>AUREX Music Studio • personal-use starter • no external API calls</footer>
+<footer>AUREX Music Studio • browser-based visuals + Worker API</footer>
 </main>
+
 <script>
 (() => {
 const $ = id => document.getElementById(id);
-const canvas = $('visual'), ctx = canvas.getContext('2d');
-let audioCtx=null, source=null, analyser=null, data=null, audioEl=null, raf=null, recorder=null, chunks=[], stream=null, startedAt=0, beatLevel=0, lastBeat=0, bpm=0, beatTimes=[], recording=false, endTimer=null;
-const W=canvas.width,H=canvas.height;
-const palettes={
- cinematic:['#080711','#25143b','#d6b46a','#b3a0ff'],
- space:['#030612','#10265a','#68e4ff','#bba3ff'],
- fantasy:['#100714','#4a174d','#e0b05c','#ff75c8'],
- neon:['#070817','#30216e','#00f0ff','#ff3bd4'],
- nature:['#06130f','#123e31','#a6d98a','#e3d4a1'],
- minimal:['#090a0d','#242833','#dedede','#8c92a5']
+const API_BASE = 'https://aurex-music-ai.factoshubh1080p.workers.dev';
+const canvas = $('visual');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+let audioCtx = null, source = null, analyser = null, data = null;
+let audioEl = null, recorder = null, chunks = [], stream = null, endTimer = null;
+let beatLevel = 0;
+
+const palettes = {
+cinematic:['#080711','#25143b','#d6b46a','#b3a0ff'],
+space:['#030612','#10265a','#68e4ff','#bba3ff'],
+fantasy:['#100714','#4a174d','#e0b05c','#ff75c8'],
+neon:['#070817','#30216e','#00f0ff','#ff3bd4'],
+nature:['#06130f','#123e31','#a6d98a','#e3d4a1'],
+minimal:['#090a0d','#242833','#dedede','#8c92a5']
 };
-let particles=[];
-function seededParticles(){particles=[];for(let i=0;i<150;i++)particles.push({x:Math.random()*W,y:Math.random()*H,z:.3+Math.random()*1.8,r:1+Math.random()*3,p:Math.random()*6.28});}
+
+let particles = [];
+function seededParticles(){
+particles = [];
+for(let i=0;i<150;i++){
+particles.push({x:Math.random()*W,y:Math.random()*H,z:.3+Math.random()*1.8,r:1+Math.random()*3,p:Math.random()*6.28});
+}
+}
 seededParticles();
-function getPalette(){return palettes[$('style').value]||palettes.cinematic}
+
+function getPalette(){return palettes[$('style').value] || palettes.cinematic;}
+
 function draw(now=0){
- const p=getPalette(), energy=analyser&&data?(analyser.getByteFrequencyData(data),data.reduce((a,b)=>a+b,0)/(data.length*255)):0.06;
- beatLevel=Math.max(energy,beatLevel*.91);
- const intensity=+$('intensity').value/70, pulse=1+beatLevel*intensity*1.8;
- const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,p[0]);g.addColorStop(.5,p[1]);g.addColorStop(1,'#03040a');
- ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- const prompt=$('prompt').value.toLowerCase();
- // Procedural background shapes respond to music. Prompt words influence the visual motif.
- ctx.save();ctx.globalAlpha=.35+energy*.5;
- for(let i=0;i<7;i++){
-  const x=W*(.12+i*.13)+Math.sin(now*.00018+i)*45, y=H*.48+Math.cos(now*.00023+i*2)*45;
-  const r=(80+i*23)*pulse;
-  const rg=ctx.createRadialGradient(x,y,1,x,y,r);rg.addColorStop(0,p[(i%3)+1]+'88');rg.addColorStop(1,p[0]+'00');
-  ctx.fillStyle=rg;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
- }
- ctx.restore();
- // Horizon / mountains for cinematic, fantasy, nature and prompt words.
- if(['cinematic','fantasy','nature'].includes($('style').value)||/mountain|castle|landscape|forest|minecraft|fantasy/.test(prompt)){
-  ctx.fillStyle='#05050b';ctx.beginPath();ctx.moveTo(0,H*.72);
-  for(let x=0;x<=W;x+=35)ctx.lineTo(x,H*.56+Math.sin(x*.008+now*.00012)*70+Math.cos(x*.017)*32);
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-  ctx.fillStyle=p[0];ctx.beginPath();ctx.moveTo(0,H*.83);
-  for(let x=0;x<=W;x+=25)ctx.lineTo(x,H*.72+Math.sin(x*.012+now*.00016)*45+Math.cos(x*.025)*19);
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
- }
- // Floating glowing particles.
- for(const a of particles){
-  a.y-=a.z*(.3+energy*4);a.x+=Math.sin(now*.0004+a.p)*a.z*.6;
-  if(a.y<0){a.y=H+Math.random()*80;a.x=Math.random()*W}
-  ctx.globalAlpha=.18+energy*.65;ctx.fillStyle=p[2];ctx.beginPath();ctx.arc(a.x,a.y,a.r*(1+energy*intensity),0,Math.PI*2);ctx.fill();
- }
- ctx.globalAlpha=1;
- // Audio-reactive central orb / ring.
- const cx=W*.5,cy=H*.46,r=85*pulse;
- ctx.lineWidth=2+energy*8;ctx.strokeStyle=p[2];ctx.shadowBlur=18+energy*55;ctx.shadowColor=p[2];
- ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
- ctx.strokeStyle=p[3];ctx.lineWidth=2;
- for(let i=0;i<72;i++){const a=i*Math.PI*2/72;const n=data&&data.length?data[i%data.length]/255:energy;
-  const r1=r+8,r2=r1+12+n*65*intensity;
-  ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);ctx.stroke();
- }
- // Prompt text only used as a small creative title, not sent anywhere.
- ctx.textAlign='center';ctx.fillStyle='#ffffff';ctx.font='600 24px system-ui';ctx.globalAlpha=.9;
- const title=$('prompt').value.trim().split(/[,.!]/)[0].slice(0,60);
- ctx.fillText(title||'AUREX MUSIC VISUAL',W/2,H*.88);ctx.globalAlpha=1;
- raf=requestAnimationFrame(draw);
+const p = getPalette();
+const energy = analyser && data
+? (analyser.getByteFrequencyData(data),data.reduce((a,b)=>a+b,0)/(data.length*255))
+: 0.06;
+
+beatLevel = Math.max(energy,beatLevel*.91);
+const intensity = Number($('intensity').value)/70;
+const pulse = 1 + beatLevel*intensity*1.8;
+
+const g = ctx.createLinearGradient(0,0,W,H);
+g.addColorStop(0,p[0]);g.addColorStop(.5,p[1]);g.addColorStop(1,'#03040a');
+ctx.fillStyle = g;ctx.fillRect(0,0,W,H);
+
+const prompt = $('prompt').value.toLowerCase();
+ctx.save();ctx.globalAlpha = .35 + energy*.5;
+for(let i=0;i<7;i++){
+const x = W*(.12+i*.13)+Math.sin(now*.00018+i)*45;
+const y = H*.48+Math.cos(now*.00023+i*2)*45;
+const r = (80+i*23)*pulse;
+const rg = ctx.createRadialGradient(x,y,1,x,y,r);
+rg.addColorStop(0,p[(i%3)+1]+'88');rg.addColorStop(1,p[0]+'00');
+ctx.fillStyle = rg;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
 }
-function fmt(s){if(!isFinite(s))return '00:00';s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+ctx.restore();
+
+if(['cinematic','fantasy','nature'].includes($('style').value) || /mountain|castle|landscape|forest|minecraft|fantasy/.test(prompt)){
+ctx.fillStyle='#05050b';ctx.beginPath();ctx.moveTo(0,H*.72);
+for(let x=0;x<=W;x+=35)ctx.lineTo(x,H*.56+Math.sin(x*.008+now*.00012)*70+Math.cos(x*.017)*32);
+ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+
+ctx.fillStyle=p[0];ctx.beginPath();ctx.moveTo(0,H*.83);
+for(let x=0;x<=W;x+=25)ctx.lineTo(x,H*.72+Math.sin(x*.012+now*.00016)*45+Math.cos(x*.025)*19);
+ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+}
+
+for(const a of particles){
+a.y -= a.z*(.3+energy*4);
+a.x += Math.sin(now*.0004+a.p)*a.z*.6;
+if(a.y<0){a.y=H+Math.random()*80;a.x=Math.random()*W;}
+ctx.globalAlpha=.18+energy*.65;ctx.fillStyle=p[2];
+ctx.beginPath();ctx.arc(a.x,a.y,a.r*(1+energy*intensity),0,Math.PI*2);ctx.fill();
+}
+ctx.globalAlpha=1;
+
+const cx=W*.5, cy=H*.46, r=85*pulse;
+ctx.lineWidth=2+energy*8;ctx.strokeStyle=p[2];
+ctx.shadowBlur=18+energy*55;ctx.shadowColor=p[2];
+ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
+
+ctx.strokeStyle=p[3];ctx.lineWidth=2;
+for(let i=0;i<72;i++){
+const a=i*Math.PI*2/72;
+const n=data&&data.length?data[i%data.length]/255:energy;
+const r1=r+8,r2=r1+12+n*65*intensity;
+ctx.beginPath();
+ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
+ctx.stroke();
+}
+
+ctx.textAlign='center';ctx.fillStyle='#fff';
+ctx.font='600 24px system-ui';ctx.globalAlpha=.9;
+const title=$('prompt').value.trim().split(/[,.!]/)[0].slice(0,60);
+ctx.fillText(title||'AUREX MUSIC VISUAL',W/2,H*.88);
+ctx.globalAlpha=1;
+requestAnimationFrame(draw);
+}
+
+async function generateEditingPlan(){
+const prompt = $('prompt').value.trim();
+const btn = $('aiBtn');
+const status = $('apiStatus');
+const output = $('apiOutput');
+
+if(!prompt){
+status.textContent='Enter a scene prompt first.';
+status.className='apiStatus error';
+return;
+}
+
+btn.disabled=true;
+btn.textContent='Contacting Worker…';
+status.textContent='Sending prompt and settings…';
+status.className='apiStatus';
+output.textContent='Waiting for API response…';
+
+try{
+const response = await fetch(API_BASE+'/api/generate',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+prompt,
+style:$('style').value,
+intensity:Number($('intensity').value),
+duration:$('duration').value,
+app:'AUREX Music Studio'
+})
+});
+
+const raw = await response.text();
+let result;
+try{result=JSON.parse(raw);}
+catch{result={message:raw || 'Empty API response.'};}
+
+output.textContent=JSON.stringify(result,null,2);
+
+if(!response.ok){
+status.textContent='HTTP '+response.status+': Worker received the request but did not return a successful plan. Check the Worker backend.';
+status.className='apiStatus error';
+}else{
+status.textContent='API request successful (HTTP '+response.status+').';
+status.className='apiStatus ok';
+}
+}catch(error){
+status.textContent='Could not reach Worker: '+error.message;
+status.className='apiStatus error';
+output.textContent='No editing plan received. Check internet, Worker URL and CORS settings.';
+}finally{
+btn.disabled=false;
+btn.textContent='Generate AI editing plan';
+}
+}
+
+function fmt(s){
+if(!isFinite(s))return '00:00';
+s=Math.max(0,Math.floor(s));
+return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+
 function updateTime(){
- if(!audioEl)return;
- $('timeInfo').textContent=fmt(audioEl.currentTime)+' / '+fmt(audioEl.duration);
- if(audioEl.duration) $('meterFill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
+if(!audioEl)return;
+const value=fmt(audioEl.currentTime)+' / '+fmt(audioEl.duration);
+$('timeInfo').textContent=value;
+$('previewTime').textContent=value;
+if(audioEl.duration)$('meterFill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
 }
+
 async function loadTrack(){
- const file=$('audioFile').files[0];if(!file){alert('Choose an audio file first.');return}
- if(audioEl){audioEl.pause();URL.revokeObjectURL(audioEl.src)}
- audioEl=new Audio(URL.createObjectURL(file));audioEl.preload='auto';audioEl.crossOrigin='anonymous';
- $('trackInfo').textContent=file.name;
- $('stateInfo').textContent='Loading audio…';
- await new Promise((resolve,reject)=>{audioEl.onloadedmetadata=resolve;audioEl.onerror=reject;audioEl.load()}).catch(()=>{});
- try{
-  audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
-  if(!source){source=audioCtx.createMediaElementSource(audioEl);analyser=audioCtx.createAnalyser();analyser.fftSize=2048;data=new Uint8Array(analyser.frequencyBinCount);source.connect(analyser);analyser.connect(audioCtx.destination)}
- }catch(e){console.error(e)}
- $('trackInfo').textContent=file.name+' • '+fmt(audioEl.duration);
- $('playBtn').disabled=false;$('recordBtn').disabled=false;$('stateInfo').textContent='Track ready';updateTime();
+const file=$('audioFile').files[0];
+if(!file){alert('Choose an audio file first.');return;}
+
+if(audioEl){audioEl.pause();URL.revokeObjectURL(audioEl.src);}
+audioEl=new Audio(URL.createObjectURL(file));
+audioEl.preload='auto';
+$('trackInfo').textContent=file.name;
+$('stateInfo').textContent='Loading audio…';
+
+try{
+await new Promise((resolve,reject)=>{
+audioEl.onloadedmetadata=resolve;
+audioEl.onerror=()=>reject(new Error('Could not load this audio file.'));
+audioEl.load();
+});
+
+audioCtx=audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+
+if(!source){
+source=audioCtx.createMediaElementSource(audioEl);
+analyser=audioCtx.createAnalyser();
+analyser.fftSize=2048;
+data=new Uint8Array(analyser.frequencyBinCount);
+source.connect(analyser);
+analyser.connect(audioCtx.destination);
 }
+
+$('trackInfo').textContent=file.name+' • '+fmt(audioEl.duration);
+$('playBtn').disabled=false;
+$('recordBtn').disabled=false;
+$('stateInfo').textContent='Track ready';
+updateTime();
+}catch(error){
+$('stateInfo').textContent=error.message;
+}
+}
+
 async function playPreview(){
- if(!audioEl)return;await audioCtx.resume();
- if(audioEl.ended)audioEl.currentTime=0;
- await audioEl.play();$('stateInfo').textContent='Playing';$('playBtn').textContent='Pause preview';
- audioEl.ontimeupdate=updateTime;audioEl.onended=()=>{$('stateInfo').textContent='Track ended';$('playBtn').textContent='Play preview'};
+if(!audioEl)return;
+await audioCtx.resume();
+if(audioEl.ended)audioEl.currentTime=0;
+await audioEl.play();
+$('stateInfo').textContent='Playing';
+$('playBtn').textContent='Pause preview';
+audioEl.ontimeupdate=updateTime;
+audioEl.onended=()=>{
+$('stateInfo').textContent='Track ended';
+$('playBtn').textContent='Play preview';
+};
 }
-function pausePreview(){if(audioEl){audioEl.pause();$('stateInfo').textContent='Paused';$('playBtn').textContent='Play preview'}}
+
+function pausePreview(){
+if(audioEl){
+audioEl.pause();
+$('stateInfo').textContent='Paused';
+$('playBtn').textContent='Play preview';
+}
+}
+
 async function startRecording(){
- if(!audioEl)return;
- await audioCtx.resume();audioEl.pause();audioEl.currentTime=0;chunks=[];
- const canvasStream=canvas.captureStream(30);
- const audioStream=audioCtx.createMediaStreamDestination();
- // analyser already receives the source; add a parallel recording destination.
- source.connect(audioStream);
- stream=new MediaStream([...canvasStream.getVideoTracks(),...audioStream.stream.getAudioTracks()]);
- let mime='video/webm;codecs=vp9,opus';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';
- recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
- recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
- recorder.onstop=()=>{
-  const blob=new Blob(chunks,{type:'video/webm'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='aurex-music-video.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  stream.getTracks().forEach(t=>t.stop());source.disconnect(audioStream);
-  $('stateInfo').textContent='Export complete';$('recordBtn').disabled=false;$('stopBtn').disabled=true;$('playBtn').disabled=false;
- };
- recorder.start(1000);recording=true;$('recordBtn').disabled=true;$('stopBtn').disabled=false;$('playBtn').disabled=true;
- $('stateInfo').textContent='Recording in real time…';startedAt=performance.now();await audioEl.play();
- let max=audioEl.duration;const d=$('duration').value;if(d!=='full')max=Math.min(max,+d);
- clearInterval(endTimer);endTimer=setInterval(()=>{updateTime();if(audioEl.currentTime>=max||audioEl.ended)stopRecording()},200);
+if(!audioEl)return;
+await audioCtx.resume();
+audioEl.pause();
+audioEl.currentTime=0;
+chunks=[];
+
+const canvasStream=canvas.captureStream(30);
+const audioStream=audioCtx.createMediaStreamDestination();
+source.connect(audioStream);
+stream=new MediaStream([...canvasStream.getVideoTracks(),...audioStream.stream.getAudioTracks()]);
+
+let mime='video/webm;codecs=vp9,opus';
+if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';
+
+recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
+recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+
+recorder.onstop=()=>{
+const blob=new Blob(chunks,{type:'video/webm'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download='aurex-music-video.webm';a.click();
+setTimeout(()=>URL.revokeObjectURL(url),30000);
+stream.getTracks().forEach(t=>t.stop());
+source.disconnect(audioStream);
+$('stateInfo').textContent='Export complete';
+$('recordBtn').disabled=false;
+$('stopBtn').disabled=true;
+$('playBtn').disabled=false;
+};
+
+recorder.start(1000);
+$('recordBtn').disabled=true;
+$('stopBtn').disabled=false;
+$('playBtn').disabled=true;
+$('stateInfo').textContent='Recording in real time…';
+await audioEl.play();
+
+let max=audioEl.duration;
+const d=$('duration').value;
+if(d!=='full')max=Math.min(max,Number(d));
+
+clearInterval(endTimer);
+endTimer=setInterval(()=>{
+updateTime();
+if(audioEl.currentTime>=max||audioEl.ended)stopRecording();
+},200);
 }
-function stopRecording(){if(recorder&&recorder.state!=='inactive')recorder.stop();clearInterval(endTimer);if(audioEl)audioEl.pause();recording=false}
+
+function stopRecording(){
+if(recorder&&recorder.state!=='inactive')recorder.stop();
+clearInterval(endTimer);
+if(audioEl)audioEl.pause();
+}
+
+$('aiBtn').addEventListener('click',generateEditingPlan);
 $('loadBtn').addEventListener('click',loadTrack);
-$('playBtn').addEventListener('click',()=>{if(!audioEl)return;if(audioEl.paused)playPreview();else pausePreview()});
-$('recordBtn').addEventListener('click',startRecording);$('stopBtn').addEventListener('click',stopRecording);
+$('playBtn').addEventListener('click',()=>{
+if(!audioEl)return;
+if(audioEl.paused)playPreview();else pausePreview();
+});
+$('recordBtn').addEventListener('click',startRecording);
+$('stopBtn').addEventListener('click',stopRecording);
 $('intensity').addEventListener('input',e=>$('intensityVal').textContent=e.target.value+'%');
 $('style').addEventListener('change',seededParticles);
-$('prompt').addEventListener('input',()=>{});
-$('audioFile').addEventListener('change',()=>{$('trackInfo').textContent=$('audioFile').files[0]?.name||'No track loaded'});
+$('audioFile').addEventListener('change',()=>{$('trackInfo').textContent=$('audioFile').files[0]?.name||'No track loaded';});
+
 draw();
 })();
 </script>
