@@ -23,12 +23,12 @@ export default {
       });
     }
 
-    if (url.pathname === "/api/health" && request.method === "GET") {
+    if (url.pathname === "/api/health") {
       return json({
         ok: true,
         app: "AUREX Music AI",
         aiConfigured: Boolean(env.AI),
-        model: env.AI_MODEL || "@cf/meta/llama-3.1-8b-instruct"
+        model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
       });
     }
 
@@ -36,14 +36,14 @@ export default {
       if (request.method !== "POST") {
         return json({
           ok: false,
-          error: "Use POST to generate an editing plan."
+          error: "Send a POST request to generate an editing plan."
         }, 405);
       }
 
       if (!env.AI) {
         return json({
           ok: false,
-          error: "Workers AI binding is missing. Check wrangler.jsonc."
+          error: "AI binding missing. Check wrangler.jsonc."
         }, 503);
       }
 
@@ -54,7 +54,7 @@ export default {
       } catch {
         return json({
           ok: false,
-          error: "Invalid JSON request body."
+          error: "Invalid JSON request."
         }, 400);
       }
 
@@ -66,49 +66,46 @@ export default {
       if (!prompt || prompt.length > 1500) {
         return json({
           ok: false,
-          error: "Prompt must contain 1–1500 characters."
+          error: "Enter a prompt between 1 and 1500 characters."
         }, 400);
       }
 
       try {
-        const model =
-          env.AI_MODEL || "@cf/meta/llama-3.1-8b-instruct";
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+          {
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are AUREX Music Studio's video editing assistant. " +
+                  "Create a concise, useful music-video editing plan. " +
+                  "Return a JSON object with keys: title, " +
+                  "visual_direction, cut_style, effects, music_sync. " +
+                  "Do not claim to render or create a video file."
+              },
+              {
+                role: "user",
+                content:
+                  "Video idea: " + prompt +
+                  "\nVisual style: " + (style || "cinematic")
+              }
+            ],
+            max_tokens: 350
+          }
+        );
 
-        const result = await env.AI.run(model, {
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are AUREX Music Studio, a video editing assistant. " +
-                "Create a useful editing plan for the user's music video. " +
-                "Return a JSON object with these keys: title, " +
-                "visual_direction, cut_style, effects, music_sync. " +
-                "Be concise. Do not claim that a video was rendered."
-            },
-            {
-              role: "user",
-              content:
-                "Video idea: " + prompt + "\n" +
-                "Visual style: " + (style || "cinematic")
-            }
-          ],
-          max_tokens: 350
-        });
+        const answer = result?.response;
 
-        const answer =
-          typeof result?.response === "string"
-            ? result.response.trim()
-            : "";
-
-        if (!answer) {
+        if (typeof answer !== "string" || !answer.trim()) {
           console.error(
-            "AUREX AI returned an empty or unexpected response:",
+            "Unexpected Workers AI response:",
             JSON.stringify(result)
           );
 
           return json({
             ok: false,
-            error: "The AI returned no text. Check Worker logs."
+            error: "AI returned an empty response. Check Worker logs."
           }, 502);
         }
 
@@ -116,14 +113,13 @@ export default {
           ok: true,
           app: "AUREX Music AI",
           type: "editing_plan",
-          plan: answer
+          plan: answer.trim()
         });
 
       } catch (error) {
-        // Full error appears in Cloudflare Worker logs.
-        console.error("AUREX AI generation failed:", {
+        console.error("AUREX AI error:", {
           message: error?.message || String(error),
-          stack: error?.stack || "No stack available"
+          stack: error?.stack || null
         });
 
         return json({
@@ -140,6 +136,6 @@ export default {
       app: "AUREX Music AI",
       status: "online",
       endpoints: ["/api/health", "/api/generate"]
-    }, 404);
+    });
   }
 };
