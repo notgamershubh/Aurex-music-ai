@@ -36,8 +36,9 @@ function typing(){let row=document.createElement("div");row.className="msg ai";r
 function showAttachment(){const root=$("attachments");root.innerHTML="";if(!attachment)return;let d=document.createElement("div");d.className="filechip";d.textContent=(attachment.kind==="image"?"▧ ":attachment.kind==="audio"?"♫ ":"▤ ")+attachment.name;let b=document.createElement("button");b.textContent="×";b.onclick=()=>{attachment=null;showAttachment()};d.appendChild(b);root.appendChild(d)}
 async function chooseFile(file,kind){if(!file)return;if(file.size>2*1024*1024){$("status").textContent="Please choose a file smaller than 2 MB.";return}let data={name:file.name,kind,size:file.size};if(kind==="text"){try{data.text=await file.text()}catch{$("status").textContent="Could not read this file.";return}if(data.text.length>16000)data.text=data.text.slice(0,16000)+"\n[File truncated to 16,000 characters]"}else if(kind==="image"){data.url=URL.createObjectURL(file)}else if(kind==="audio"){data.url=URL.createObjectURL(file)}attachment=data;showAttachment();$("status").textContent=kind==="image"?"Image added for context in this chat UI; visual analysis is not enabled on the current text model.":kind==="audio"?"Audio attached. The current chat model cannot transcribe audio files yet.":"File ready — its text will be included with your next message."}
 async function createPromptVideo(prompt,audioFile){
+  const setVideoProgress=message=>{if($("status"))$("status").textContent=message;if($("videoStudioStatus"))$("videoStudioStatus").textContent=message;};
   const requestJSON=async(url,options)=>{const r=await fetch(url,{...options,signal:AbortSignal.timeout(120000)});let d;try{d=await r.json()}catch{throw Error("The AI service returned an unreadable response (HTTP "+r.status+").")}if(!r.ok)throw Error(d.error||("Request failed (HTTP "+r.status+")."));return d};
-  $("status").textContent="Planning 4 scenes…";
+  setVideoProgress("Planning 4 scenes with AI…");
   let scenes=[];
   try {
     const board=await requestJSON(API+"/ai/video-scenes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
@@ -59,16 +60,16 @@ async function createPromptVideo(prompt,audioFile){
         (game?"Use a detailed game-cinematic visual style, coherent game-world materials and consistent subject design. ":"Use professional cinematic art direction, coherent subject design and realistic materials. ")+
         detail+". 16:9 widescreen framing, carefully composed foreground and background, detailed textures, volumetric lighting, crisp subject focus, controlled cinematic color grading. No text, captions, logos, watermarks or borders."
     }));
-    $("status").textContent="Storyboard AI unavailable; using backup scene plan…";
+    setVideoProgress("Storyboard AI unavailable; using backup scene plan…");
   }
   const frames=[];
   for(let i=0;i<scenes.length;i++){
-    $("status").textContent="Creating AI scene "+(i+1)+" of "+scenes.length+"…";
+    setVideoProgress("Creating AI scene "+(i+1)+" of "+scenes.length+"… this can take a little while.");
     const d=await requestJSON(API+"/ai/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:scenes[i].image_prompt,enhance:false})});
     if(!d.dataURI)throw Error("Image generation failed on scene "+(i+1)+".");
     const img=new Image();img.src=d.dataURI;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Could not load generated scene "+(i+1)+"."))});frames.push({img,motion:scenes[i].motion,title:scenes[i].title});
   }
-  $("status").textContent="Rendering video… keep this tab open.";
+  setVideoProgress("All scene images ready. Rendering video… keep this tab open.");
   const canvas=document.createElement("canvas");canvas.width=1280;canvas.height=720;
   const ctx=canvas.getContext("2d");const stream=canvas.captureStream(24);let audio=null,audioCtx=null,destination=null;
   if(audioFile){
