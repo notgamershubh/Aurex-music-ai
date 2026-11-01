@@ -70,15 +70,21 @@ async function createPromptVideo(prompt,audioFile){
     const img=new Image();img.src=d.dataURI;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error("Could not load generated scene "+(i+1)+"."))});frames.push({img,motion:scenes[i].motion,title:scenes[i].title});
   }
   setVideoProgress("All scene images ready. Rendering video… keep this tab open.");
-  const canvas=document.createElement("canvas");canvas.width=1280;canvas.height=720;
-  const ctx=canvas.getContext("2d");const stream=canvas.captureStream(24);let audio=null,audioCtx=null,destination=null;
+  if(!window.MediaRecorder)throw Error("This browser does not support video recording. Please use the latest Chrome or Edge.");
+  const canvas=document.createElement("canvas");canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d");if(!ctx||!canvas.captureStream)throw Error("Canvas video export is not supported in this browser.");
+  const stream=canvas.captureStream(20);let audio=null,audioCtx=null,destination=null;
   if(audioFile){
     try{audio=new Audio();audio.src=audioFile;audio.preload="auto";await new Promise((resolve,reject)=>{audio.onloadedmetadata=resolve;audio.onerror=()=>reject(Error("Attached audio could not be loaded."));audio.load()});audioCtx=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume();const source=audioCtx.createMediaElementSource(audio);destination=audioCtx.createMediaStreamDestination();source.connect(destination);source.connect(audioCtx.destination);destination.stream.getAudioTracks().forEach(t=>stream.addTrack(t));}catch(e){console.warn("Audio track could not be added:",e);}
   }
-  const mime=MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")?"video/webm;codecs=vp9,opus":"video/webm";
-  const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});const chunks=[];
-  const finished=new Promise(resolve=>{recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onerror=()=>resolve(null);recorder.onstop=()=>resolve(new Blob(chunks,{type:"video/webm"}))});
-  const totalMs=12000,sceneMs=totalMs/frames.length,start=performance.now();recorder.start(500);
+  const candidates=["video/webm;codecs=vp8","video/webm;codecs=vp9","video/webm"];
+  const supported=candidates.find(type=>!MediaRecorder.isTypeSupported||MediaRecorder.isTypeSupported(type));
+  if(!supported)throw Error("This browser has no supported WebM video encoder. Please try the latest Chrome or Edge.");
+  let recorder;try{recorder=new MediaRecorder(stream,{mimeType:supported,videoBitsPerSecond:2500000});}catch(e){throw Error("The browser could not start its video encoder: "+(e.message||"unsupported format"));}
+  const chunks=[];let recorderError=null;
+  const finished=new Promise(resolve=>{recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};recorder.onerror=e=>{recorderError=e.error||Error("The browser video recorder encountered an error.")};recorder.onstop=()=>resolve(new Blob(chunks,{type:recorder.mimeType||"video/webm"}))});
+  const totalMs=12000,sceneMs=totalMs/frames.length,start=performance.now();
+  try{recorder.start(500);}catch(e){stream.getTracks().forEach(t=>t.stop());throw Error("Could not begin video recording: "+(e.message||"browser encoder error"));}
   if(audio){audio.currentTime=0;audio.play().catch(()=>{});}
   await new Promise(resolve=>{
     function draw(now){
@@ -95,9 +101,11 @@ async function createPromptVideo(prompt,audioFile){
       if(elapsed<totalMs)requestAnimationFrame(draw);else resolve();
     }requestAnimationFrame(draw);
   });
-  if(recorder.state!=="inactive")recorder.stop();const blob=await finished;
+  if(recorder.state!=="inactive"){try{recorder.requestData();}catch{}recorder.stop();}
+  const blob=await finished;
   if(audio){audio.pause();audio.src="";}if(audioCtx)await audioCtx.close().catch(()=>{});stream.getTracks().forEach(t=>t.stop());
-  if(!blob||!blob.size)throw Error("Video export failed in this browser.");
+  if(recorderError)throw Error("Browser video encoder failed: "+(recorderError.message||"recording interrupted"));
+  if(!blob||!blob.size)throw Error("The browser created an empty video file. Try the latest Chrome or Edge and keep this tab active during export.");
   return URL.createObjectURL(blob);
 }
 async function send(text){text=(text??$("prompt").value).trim();if(!text&&!attachment||busy)return;let task=mode,att=attachment;let userText=text||("Please help me with the attached file: "+att.name);if(att?.kind==="text")userText+="\n\n[Attached file: "+att.name+"]\n"+att.text;if(att?.kind==="image")userText+="\n\n[Image attached: "+att.name+". Note: current text model cannot inspect image pixels.]";if(att?.kind==="audio")userText+="\n\n[Audio attached: "+att.name+". Current model cannot transcribe audio.]";mode="chat";["search","image","video"].forEach(x=>$(x).classList.remove("active"));$("prompt").placeholder="Message AUREX AI…";$("prompt").value="";attachment=null;showAttachment();resize();busy=true;$("send").disabled=true;$("status").textContent="";messages.push({role:"user",content:userText,fileName:att?.name});render();save();typing();
