@@ -135,6 +135,8 @@ generateBtn.addEventListener("click",async()=>{
   if(!health.ok)throw new Error("Music API unavailable (HTTP "+health.status+"). VPS API aur tunnel running hone chahiye.");
   const h=await health.json();
   if(!h.ok)throw new Error("Music API health check failed.");
+  const modelReady = h.model_loaded ?? h.loaded;
+  if(modelReady === false)throw new Error("Music model is still loading. Wait a little and try again.");
   statusBox.textContent="Music generate ho raha hai… is tab ko khula rakho. CPU par lamba time lag sakta hai.";
   const response=await fetch(API_BASE+"/api/music",{
    method:"POST",
