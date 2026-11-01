@@ -54,6 +54,7 @@ def health():
         "model": MODEL_ID,
         "device": "cpu",
         "loaded": model is not None,
+        "model_loaded": model is not None,
         "max_seconds": MAX_SECONDS,
     }
 
