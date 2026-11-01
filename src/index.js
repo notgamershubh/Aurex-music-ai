@@ -145,11 +145,28 @@ export default {
           ],
           max_tokens: 1100
         });
-        let raw = String(result?.response || "").trim();
-        raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-        const start = raw.indexOf("{"), end = raw.lastIndexOf("}");
-        if (start >= 0 && end > start) raw = raw.slice(start, end + 1);
-        const parsed = JSON.parse(raw);
+        const value = result?.response;
+        let parsed;
+
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          if (Array.isArray(value.scenes)) {
+            parsed = value;
+          } else if (typeof value.response === "string") {
+            parsed = JSON.parse(value.response);
+          } else if (typeof value.text === "string") {
+            parsed = JSON.parse(value.text);
+          } else {
+            throw new Error("Unexpected AI response object; keys: " + Object.keys(value).join(", "));
+          }
+        } else if (typeof value === "string") {
+          let raw = value.trim();
+          raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+          const start = raw.indexOf("{"), end = raw.lastIndexOf("}");
+          if (start >= 0 && end > start) raw = raw.slice(start, end + 1);
+          parsed = JSON.parse(raw);
+        } else {
+          throw new Error("AI response was empty or had an unsupported format.");
+        }
         if (!Array.isArray(parsed.scenes) || parsed.scenes.length < 4) throw new Error("Storyboard did not contain four scenes.");
         const scenes = parsed.scenes.slice(0, 4).map((scene, i) => ({
           title: String(scene.title || ("Scene " + (i + 1))).slice(0, 80),
