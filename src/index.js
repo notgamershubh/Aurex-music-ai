@@ -274,13 +274,16 @@ export default {
         // Prefer Gemini image generation when configured; keep the key server-side in Cloudflare Worker secrets.
         if (env.GEMINI_API_KEY) {
           const geminiResponse = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY),
+            "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite-image:generateContent",
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: enhancedPrompt }] }],
-                generationConfig: { responseModalities: ["TEXT", "IMAGE"] }
+                generationConfig: {
+                  responseModalities: ["TEXT", "IMAGE"],
+                  imageConfig: { aspectRatio: "16:9", imageSize: "1K" }
+                }
               }),
               signal: AbortSignal.timeout(90000)
             }
