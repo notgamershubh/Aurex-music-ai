@@ -251,7 +251,7 @@ export default {
     // Text-to-image endpoint. First enriches the prompt, then generates with FLUX Schnell.
     if (url.pathname === "/api/ai/image") {
       if (request.method !== "POST") return json({ error: "Use POST." }, 405);
-      if (!env.AI) return json({ error: "Workers AI binding is missing." }, 503);
+      if (!env.GEMINI_API_KEY && !env.AI) return json({ error: "Image generation is not configured. Add GEMINI_API_KEY as a Cloudflare Worker secret, or configure the Workers AI binding." }, 503);
       const body = await readBody(request);
       const prompt = String(body?.prompt || "").trim();
       if (!prompt || prompt.length > 1000) return json({ error: "Enter an image prompt under 1000 characters." }, 400);
@@ -271,9 +271,38 @@ export default {
         } catch (enhanceError) {
           console.warn("AUREX prompt enhancement skipped:", enhanceError?.message || String(enhanceError));
         }
+        // Prefer Gemini image generation when configured; keep the key server-side in Cloudflare Worker secrets.
+        if (env.GEMINI_API_KEY) {
+          const geminiResponse = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY),
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: enhancedPrompt }] }],
+                generationConfig: { responseModalities: ["TEXT", "IMAGE"] }
+              }),
+              signal: AbortSignal.timeout(90000)
+            }
+          );
+          const geminiData = await geminiResponse.json().catch(() => ({}));
+          if (!geminiResponse.ok) {
+            const detail = geminiData?.error?.message || ("Gemini request failed (HTTP " + geminiResponse.status + ").");
+            console.error("AUREX Gemini image error:", detail);
+            return json({ error: "Gemini image generation failed: " + detail }, geminiResponse.status === 429 ? 429 : 502);
+          }
+          const parts = geminiData?.candidates?.flatMap(candidate => candidate?.content?.parts || []) || [];
+          const imagePart = parts.find(part => part?.inlineData?.data || part?.inline_data?.data);
+          const inline = imagePart?.inlineData || imagePart?.inline_data;
+          if (!inline?.data) return json({ error: "Gemini returned no image. Check that image generation is enabled for this API key and model." }, 502);
+          const mimeType = inline.mimeType || inline.mime_type || "image/png";
+          return json({ dataURI: "data:" + mimeType + ";base64," + inline.data, enhanced: enhancedPrompt !== prompt, provider: "Gemini" });
+        }
+
+        // Existing Workers AI image generation remains available when no Gemini key is configured.
         const result = await env.AI.run("@cf/black-forest-labs/flux-1-schnell", { prompt: enhancedPrompt, steps: 4 });
         if (!result?.image) return json({ error: "Image model returned no image. Check model availability." }, 502);
-        return json({ dataURI: "data:image/jpeg;base64," + result.image, enhanced: enhancedPrompt !== prompt });
+        return json({ dataURI: "data:image/jpeg;base64," + result.image, enhanced: enhancedPrompt !== prompt, provider: "Workers AI" });
       } catch (error) {
         console.error("AUREX image error:", error?.message || String(error));
         return json({ error: "Image generation unavailable or free usage limit reached." }, 502);
