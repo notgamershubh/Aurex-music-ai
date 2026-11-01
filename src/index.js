@@ -70,6 +70,61 @@ export default {
       }
     }
 
+
+    // Hosted AI music generation through Daydream. The provider key stays in a Worker secret.
+    if (url.pathname === "/api/ai/music") {
+      if (!env.DAYDREAM_API_KEY) return json({ error: "Music provider is not configured yet. Add DAYDREAM_API_KEY as a Cloudflare Worker secret." }, 503);
+      const headers = { Authorization: "Bearer " + env.DAYDREAM_API_KEY, "Content-Type": "application/json" };
+
+      if (request.method === "POST") {
+        const body = await readBody(request);
+        const prompt = String(body?.prompt || "").trim();
+        const duration = Math.max(10, Math.min(120, Number(body?.duration) || 30));
+        if (!prompt || prompt.length > 400) return json({ error: "Enter a music prompt between 1 and 400 characters." }, 400);
+        try {
+          const upstream = await fetch("https://gen.daydream.live/v1/songs", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ prompt, duration, variations: 1 })
+          });
+          const data = await upstream.json().catch(() => ({}));
+          if (!upstream.ok) {
+            const message = data.message || data.error || "Music provider request failed.";
+            return json({ error: message, provider_status: upstream.status }, upstream.status === 402 ? 402 : 502);
+          }
+          return json({ ok: true, id: data.id, status: data.status, position: data.position ?? null });
+        } catch (error) {
+          console.error("AUREX music create error:", error?.message || String(error));
+          return json({ error: "Could not reach the music provider. Try again later." }, 502);
+        }
+      }
+
+      if (request.method === "GET") {
+        const id = (url.searchParams.get("id") || "").trim();
+        if (!/^sng_[A-Za-z0-9]+$/.test(id)) return json({ error: "A valid music job ID is required." }, 400);
+        try {
+          const upstream = await fetch("https://gen.daydream.live/v1/songs/" + encodeURIComponent(id), {
+            headers: { Authorization: "Bearer " + env.DAYDREAM_API_KEY }
+          });
+          const data = await upstream.json().catch(() => ({}));
+          if (!upstream.ok) return json({ error: data.message || data.error || "Could not check music generation status." }, 502);
+          if (data.status === "failed") return json({ ok: false, status: "failed", error: data.error?.message || "Music generation failed. Try another prompt." }, 502);
+          const take = data.takes?.[0];
+          return json({
+            ok: true,
+            status: data.status,
+            position: data.position ?? null,
+            audio_url: data.status === "done" ? (take?.mp3_url || take?.wav_url || null) : null,
+            duration: take?.duration ?? null
+          });
+        } catch (error) {
+          console.error("AUREX music status error:", error?.message || String(error));
+          return json({ error: "Could not check music generation status. Try again." }, 502);
+        }
+      }
+      return json({ error: "Use GET or POST." }, 405);
+    }
+
     // New AUREX AI chat and coding endpoint.
     if (url.pathname === "/api/ai/chat") {
       if (request.method !== "POST") return json({ error: "Use POST." }, 405);
