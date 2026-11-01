@@ -9,9 +9,31 @@
 
 /* Focused workspace: chat, coding and image generation only */
 #openMusic,#musicOpenSmall,#video,.card[data-mode="video"],#musicModal,#videoModal{display:none!important}
+
+.auth-open{border:1px solid #8d7137;background:linear-gradient(135deg,#f0dda6,#b68b3d);color:#17130a;border-radius:10px;padding:8px 12px;font-weight:800;font-size:12px;white-space:nowrap}
+.auth-modal{display:none;position:fixed;inset:0;z-index:200;background:#000c;padding:16px;align-items:center;justify-content:center}
+.auth-modal.open{display:flex}
+.auth-card{width:min(440px,100%);max-height:92dvh;overflow:auto;background:#171717;border:1px solid #65512e;border-radius:20px;padding:24px;box-shadow:0 24px 100px #000b}
+.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.auth-brand .logo{flex-shrink:0}
+.auth-card h2{font-size:25px;margin:4px 0 5px;letter-spacing:-.04em}
+.auth-card p{font-size:12px;color:#aaa;margin:0 0 18px}
+.auth-field{display:block;font-size:12px;color:#d8c28f;margin:13px 0 6px}
+.auth-input{display:block;width:100%;background:#101010;border:1px solid #414141;border-radius:10px;padding:12px;color:#fff;outline:none}
+.auth-input:focus{border-color:#b9954c}
+.auth-actions{display:flex;gap:8px;margin-top:16px}
+.auth-primary,.auth-secondary{border-radius:10px;padding:11px 14px;font-weight:750}
+.auth-primary{background:linear-gradient(135deg,#f0dda6,#b68b3d);border:0;color:#17130a;flex:1}
+.auth-secondary{background:#252525;border:1px solid #444;color:#eee}
+.auth-status{font-size:12px;color:#d8c28f;min-height:18px;margin-top:12px;white-space:pre-wrap}
+.auth-config{margin-top:20px;border-top:1px solid #333;padding-top:14px}
+.auth-config summary{font-size:12px;color:#aaa;cursor:pointer}
+.auth-note{font-size:11px!important;line-height:1.6;color:#888!important;margin:8px 0!important}
+.auth-link{background:none;border:0;color:#f0d99d;font-size:12px;padding:10px 0}
+@media(max-width:500px){.auth-card{padding:19px}.auth-open{padding:7px 9px}}
 </style></head><body><div class="app">
 <aside class="sidebar" id="sidebar"><div class="brand"><div class="logo">✦</div><div><span>AUREX</span><small>AI WORKSPACE</small></div></div><button class="sidebtn new" id="new"><b>＋</b> New chat <span style="margin-left:auto;color:#888;font-size:11px">Ctrl K</span></button><div class="label">YOUR CHATS</div><div class="history" id="history"></div><div class="bottom"><button class="sidebtn" id="clear">⌫ &nbsp; Clear chat history</button><div class="profile"><div class="profileicon">A</div><div><b style="font-size:12px;color:#eee">AUREX AI</b><div style="font-size:11px;color:#888">Free workspace</div></div></div><p>AI responses may be inaccurate. Verify important information.</p></div></aside><div class="overlay" id="overlay"></div>
-<section class="main"><header class="top"><div style="display:flex;align-items:center;gap:10px"><button class="iconbtn" id="menu" aria-label="Open menu">☰</button><div class="topname">AUREX <span style="color:#999;font-weight:500">AI</span></div></div><div style="display:flex;align-items:center;gap:12px"><span class="tag">✦ Premium interface</span><button id="openMusic" type="button" style="border:1px solid #5c4a2a;background:#282216;color:#f0d99d;border-radius:10px;padding:8px 11px;font-size:12px">♫ AI Music Generator</button></div></header>
+<section class="main"><header class="top"><div style="display:flex;align-items:center;gap:10px"><button class="iconbtn" id="menu" aria-label="Open menu">☰</button><div class="topname">AUREX <span style="color:#999;font-weight:500">AI</span></div></div><div style="display:flex;align-items:center;gap:12px"><span class="tag">✦ Premium interface</span><button id="authOpen" class="auth-open" type="button">Log in</button><button id="openMusic" type="button" style="border:1px solid #5c4a2a;background:#282216;color:#f0d99d;border-radius:10px;padding:8px 11px;font-size:12px">♫ AI Music Generator</button></div></header>
 <div class="work" id="work"><section class="chat"><div class="welcome" id="welcome"><h1>What can I help you<br><span class="goldtext">create today?</span></h1><p class="muted">Chat, coding help, and AI image generation in one simple workspace.</p><div class="cards"><button class="card" data-prompt="Explain this topic in simple Hindi, with examples."><div class="emoji">✧</div><strong>Learn something</strong><span>Clear answers, step by step</span></button><button class="card" data-prompt="Help me build and debug a coding project. Give me working code and explain where it goes."><div class="emoji">⌘</div><strong>Code with me</strong><span>Build, debug and improve</span></button><button class="card" data-mode="image" data-prompt="Cinematic fantasy landscape with dramatic lighting, intricate details, widescreen composition"><div class="emoji">▧</div><strong>Create an image</strong><span>Turn a prompt into art</span></button><button class="card" data-mode="video" data-prompt="Epic cinematic fantasy video with dramatic camera movement and synchronized music"><div class="emoji">▶</div><strong>Plan a video</strong><span>Scenes, mood and edit plan</span></button></div></div><div class="messages" id="messages"></div></section></div>
 <div class="composer"><div class="modebar"><button class="tool" id="search">⌕ Wikipedia search</button><button class="tool" id="image">▧ Create image</button><button class="tool" id="video">▶ Video studio</button><button class="tool" id="musicOpenSmall">♫ AI Music Generator</button><button class="tool" id="voice">🎙 Voice</button></div><div class="box"><div id="attachments"></div><textarea id="prompt" rows="1" maxlength="8000" placeholder="Message AUREX AI…"></textarea><div class="tools"><div class="lefttools"><div class="menuwrap"><button class="plus" id="plus" aria-label="Add attachment">＋</button><div class="popup" id="popup"><button id="pickFile">▤ &nbsp; Upload a file<small>TXT, MD, CSV, JSON and code files</small></button><button id="pickImage">▧ &nbsp; Add an image<small>Preview it in your chat</small></button><button id="pickAudio">♫ &nbsp; Add audio file<small>Keep it with your message</small></button></div></div><button class="tool" id="read">◖ Read aloud</button><span class="muted" id="modeNote" style="font-size:11px">Ready when you are</span></div><button class="send" id="send" aria-label="Send message">↑</button></div></div><input id="fileInput" type="file" hidden accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.java,.c,.cpp,.yml,.yaml,.xml,.log,.sql,.sh"><input id="imageInput" type="file" hidden accept="image/*"><input id="audioInput" type="file" hidden accept="audio/*"><div class="hint">AUREX AI can make mistakes. Check important information.</div><div class="status" id="status"></div></div></section></div>
 <div class="music-modal" id="musicModal" role="dialog" aria-modal="true" aria-label="AUREX AI Music Generator"><section class="music-shell"><header class="music-modal-head"><div><strong>♫ AUREX AI MUSIC GENERATOR</strong><span class="music-caption">Hosted AI music · no VPS needed</span></div><div class="music-head-actions"><a class="music-external" href="https://aurex-music-ai.factoshubh1080p.workers.dev/api/health" target="_blank" rel="noopener noreferrer">Music API status ↗</a><button class="music-close" id="closeMusic" type="button">Close ✕</button></div></header><div class="aurex-music-ui">
@@ -24,6 +46,35 @@
 <div id="musicResult" class="music-result" hidden><div class="music-result-title">YOUR TRACK</div><audio id="musicAudio" controls></audio><a id="musicDownload" class="music-download" download="aurex-track.wav">Download audio ↓</a></div>
 <div class="music-footnote">Powered by a hosted music-generation service through AUREX Cloudflare Worker. No VPS required.</div>
 </div></section></div><div class="music-modal" id="videoModal" role="dialog" aria-modal="true" aria-label="AUREX AI Video Studio"><section class="music-shell"><header class="music-modal-head"><div><strong>▶ AUREX AI VIDEO STUDIO</strong><span class="music-caption">Free AI scenes · browser video export</span></div><button class="music-close" id="closeVideo" type="button">Close ✕</button></header><div class="aurex-music-ui"><div class="music-hero"><div class="music-orb">▶</div><div><div class="music-eyebrow">AUREX MOTION LAB</div><h2>Turn your idea into a video.</h2><p>Generate four AI scene images, animate the camera and export a 12-second WebM clip.</p></div></div><label class="music-label" for="videoPrompt">Describe your video</label><textarea id="videoPrompt" class="music-prompt" maxlength="1000" rows="4" placeholder="Example: A Minecraft warrior faces a giant dragon in a dark volcanic arena, cinematic boss battle, dramatic fire and camera movement..."></textarea><div class="music-presets"><button type="button" class="music-preset" data-video-prompt="Epic Minecraft boss battle in a dark volcanic arena, a warrior faces a giant dragon, fire, smoke, dramatic cinematic lighting">⚔️ Boss fight</button><button type="button" class="music-preset" data-video-prompt="A futuristic golden city at night, flying vehicles, neon lights, cinematic aerial camera movement">🌆 Futuristic</button><button type="button" class="music-preset" data-video-prompt="A peaceful fantasy kingdom among mountains and waterfalls at sunrise, magical atmosphere, cinematic camera movement">✨ Fantasy</button></div><div class="music-controls"><span class="music-limit">No paid video API · uses your existing Workers AI image quota</span><button id="generateVideo" class="music-generate" type="button">▶ Generate Video</button></div><div id="videoStudioStatus" class="music-status" role="status">Ready when you are.</div><div id="videoStudioResult" class="music-result" hidden><div class="music-result-title">YOUR VIDEO</div><video id="videoPreview" controls playsinline style="display:block;width:100%;max-height:60vh;border-radius:12px;background:#000"></video><a id="videoDownload" class="music-download" download="aurex-video.webm">Download video ↓</a></div><div class="music-footnote">This free mode creates AI-generated scene artwork with animated camera movement. It is a slideshow-style cinematic video, not frame-by-frame AI motion generation. Free Cloudflare usage limits may apply.</div></div></section></div>
+
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <section class="auth-card">
+    <div class="auth-brand"><div class="logo">✦</div><div><strong style="letter-spacing:.12em">AUREX</strong><div style="font-size:10px;color:#999;letter-spacing:.16em">YOUR AI WORKSPACE</div></div><button id="authClose" class="auth-secondary" type="button" style="margin-left:auto;padding:6px 10px">✕</button></div>
+    <h2 id="authTitle">Welcome back</h2>
+    <p id="authSubtitle">Log in to your AUREX account.</p>
+    <label class="auth-field" for="authEmail">Email address</label>
+    <input class="auth-input" id="authEmail" type="email" autocomplete="email" placeholder="you@example.com">
+    <label class="auth-field" for="authPassword">Password</label>
+    <input class="auth-input" id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters">
+    <div class="auth-actions"><button id="authSubmit" class="auth-primary" type="button">Log in</button><button id="authSwitch" class="auth-secondary" type="button">Sign up</button></div>
+    <button id="authReset" class="auth-link" type="button">Forgot password?</button>
+    <div id="authStatus" class="auth-status" role="status"></div>
+    <div class="auth-config">
+      <details id="authConfigDetails">
+        <summary>Connect authentication (one-time setup)</summary>
+        <p class="auth-note">Create a free Supabase project, then paste its Project URL and publishable/anon key below. These are public client settings; never paste a service-role key here.</p>
+        <label class="auth-field" for="supabaseUrl">Supabase Project URL</label>
+        <input class="auth-input" id="supabaseUrl" type="url" placeholder="https://your-project.supabase.co" autocomplete="url">
+        <label class="auth-field" for="supabaseKey">Publishable key / anon public key</label>
+        <input class="auth-input" id="supabaseKey" type="password" placeholder="sb_publishable_… or anon key" autocomplete="off">
+        <div class="auth-actions"><button id="authConnect" class="auth-primary" type="button">Save & connect</button></div>
+        <p class="auth-note">Get these from Supabase → Project Settings → API. Email confirmation settings are controlled in Supabase Authentication.</p>
+        <p class="auth-note"><a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Open Supabase dashboard ↗</a> · <a href="https://supabase.com/docs/guides/auth" target="_blank" rel="noopener noreferrer">Auth setup guide ↗</a></p>
+      </details>
+    </div>
+  </section>
+</div>
+
 <script>
 const API="https://aurex-music-ai.factoshubh1080p.workers.dev/api", $=id=>document.getElementById(id);
 let messages=[],chats=[],active=null,mode="chat",busy=false,attachment=null;
@@ -147,5 +198,25 @@ generateBtn.addEventListener("click",async()=>{
   audioEl.src=track.audio_url;downloadEl.href=track.audio_url;downloadEl.download="aurex-track.mp3";resultBox.hidden=false;statusBox.textContent="Track ready — play or download it below.";
  }catch(e){console.error("AUREX hosted music:",e);statusBox.textContent="Music generation failed: "+(e?.message||"Unknown error")}finally{generateBtn.disabled=false;generateBtn.textContent="♫ Generate Music"}
 });
-</script></body></html>
+</script>
+<script type="module">
+const authEl=id=>document.getElementById(id);
+let supabaseClient=null,authMode="login",authUser=null;
+const AUTH_CONFIG_KEY="aurex_supabase_config";
+function authMessage(message){authEl("authStatus").textContent=message||""}
+function authSetMode(mode){authMode=mode;authEl("authTitle").textContent=mode==="signup"?"Create your account":"Welcome back";authEl("authSubtitle").textContent=mode==="signup"?"Sign up to get started with AUREX.":"Log in to your AUREX account.";authEl("authSubmit").textContent=mode==="signup"?"Create account":"Log in";authEl("authSwitch").textContent=mode==="signup"?"I have an account":"Sign up";authEl("authPassword").autocomplete=mode==="signup"?"new-password":"current-password";authMessage("")}
+function authRender(){const btn=authEl("authOpen");if(authUser){btn.textContent=(authUser.email||"Account").split("@")[0].slice(0,18);btn.title=authUser.email||"Signed in";authEl("authTitle").textContent="You're signed in";authEl("authSubtitle").textContent=authUser.email||"AUREX account";authEl("authSubmit").textContent="Log out";authEl("authSwitch").style.display="none";authEl("authReset").style.display="none";authEl("authEmail").style.display="none";authEl("authPassword").style.display="none";document.querySelectorAll('label[for="authEmail"],label[for="authPassword"]').forEach(x=>x.style.display="none");}else{btn.textContent="Log in";authEl("authSwitch").style.display="";authEl("authReset").style.display="";authEl("authEmail").style.display="";authEl("authPassword").style.display="";document.querySelectorAll('label[for="authEmail"],label[for="authPassword"]').forEach(x=>x.style.display="");authSetMode(authMode)}}
+async function authInit(url,key){try{const mod=await import("https://esm.sh/@supabase/supabase-js@2");supabaseClient=mod.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data,error}=await supabaseClient.auth.getSession();if(error)throw error;authUser=data.session?.user||null;supabaseClient.auth.onAuthStateChange((_event,session)=>{authUser=session?.user||null;authRender()});authRender();return true}catch(e){supabaseClient=null;authMessage("Could not connect: "+(e?.message||"Check the Supabase URL and public key."));return false}}
+authEl("authOpen").addEventListener("click",()=>{authEl("authModal").classList.add("open");authMessage("");if(authUser){authEl("authTitle").textContent="You're signed in";authEl("authSubtitle").textContent=authUser.email||"AUREX account";authEl("authSubmit").textContent="Log out";}else authSetMode(authMode)});
+authEl("authClose").addEventListener("click",()=>authEl("authModal").classList.remove("open"));
+authEl("authModal").addEventListener("click",e=>{if(e.target===authEl("authModal"))authEl("authModal").classList.remove("open")});
+authEl("authSwitch").addEventListener("click",()=>authSetMode(authMode==="login"?"signup":"login"));
+authEl("authConnect").addEventListener("click",async()=>{const url=authEl("supabaseUrl").value.trim().replace(/\/$/,""),key=authEl("supabaseKey").value.trim();if(!/^https:\/\/[a-zA-Z0-9.-]+$/.test(url)||!key){authMessage("Enter a valid Supabase Project URL and public anon/publishable key.");return}authMessage("Connecting…");const ok=await authInit(url,key);if(ok){try{localStorage.setItem(AUTH_CONFIG_KEY,JSON.stringify({url,key}))}catch{}authMessage("Connected! You can now log in or create an account.");authEl("authConfigDetails").open=false}});
+authEl("authSubmit").addEventListener("click",async()=>{if(authUser){if(supabaseClient){const {error}=await supabaseClient.auth.signOut();if(error)authMessage(error.message);else{authUser=null;authRender();authMessage("Signed out.")}}return}if(!supabaseClient){authMessage("First connect your Supabase project in the setup section below.");authEl("authConfigDetails").open=true;return}const email=authEl("authEmail").value.trim(),password=authEl("authPassword").value;if(!email||!password){authMessage("Enter your email and password.");return}authEl("authSubmit").disabled=true;authMessage(authMode==="signup"?"Creating account…":"Logging in…");try{const result=authMode==="signup"?await supabaseClient.auth.signUp({email,password}):await supabaseClient.auth.signInWithPassword({email,password});if(result.error)throw result.error;if(authMode==="signup"&&!result.data.session)authMessage("Account created. Check your email to confirm it, then log in.");else{authUser=result.data.user||null;authRender();authMessage(authUser?"Signed in successfully.":"Done.");}}catch(e){authMessage(e?.message||"Authentication failed. Try again.")}finally{authEl("authSubmit").disabled=false}});
+authEl("authReset").addEventListener("click",async()=>{if(!supabaseClient){authMessage("Connect your Supabase project first.");authEl("authConfigDetails").open=true;return}const email=authEl("authEmail").value.trim();if(!email){authMessage("Enter your email first.");return}const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:location.href.split("#")[0]});authMessage(error?error.message:"If that email is registered, a password reset link has been sent.")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")authEl("authModal").classList.remove("open")});
+try{const saved=JSON.parse(localStorage.getItem(AUTH_CONFIG_KEY)||"null");if(saved?.url&&saved?.key){authEl("supabaseUrl").value=saved.url;authEl("supabaseKey").value=saved.key;authInit(saved.url,saved.key)}}catch{}
+</script>
+
+</body></html>
 
