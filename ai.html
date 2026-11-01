@@ -116,9 +116,46 @@ document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{if(b.datase
 history();render();if(chats.length)load(chats[0].id);
 </script></body></html>
 <script type="module">
-import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
-const promptBox=document.getElementById("musicPrompt"), generateBtn=document.getElementById("generateMusic"), statusBox=document.getElementById("musicStatus"), resultBox=document.getElementById("musicResult"), audioEl=document.getElementById("musicAudio"), downloadEl=document.getElementById("musicDownload");
+const API_BASE = "https://currency-loved-similar-advert.trycloudflare.com";
+const promptBox=document.getElementById("musicPrompt");
+const generateBtn=document.getElementById("generateMusic");
+const statusBox=document.getElementById("musicStatus");
+const resultBox=document.getElementById("musicResult");
+const audioEl=document.getElementById("musicAudio");
+const downloadEl=document.getElementById("musicDownload");
 document.querySelectorAll("[data-music-prompt]").forEach(b=>b.addEventListener("click",()=>{promptBox.value=b.dataset.musicPrompt;promptBox.focus()}));
-function findAudio(value){if(!value)return null;if(Array.isArray(value)){for(const v of value){const got=findAudio(v);if(got)return got}}else if(typeof value==="object"){if(typeof value.url==="string" && (/\.(wav|mp3|ogg|flac)(\?|$)/i.test(value.url)||value.url.includes("/file=")))return value.url;if(typeof value.path==="string")return value.url||value.path;for(const v of Object.values(value)){const got=findAudio(v);if(got)return got}}return null}
-generateBtn.addEventListener("click",async()=>{const prompt=promptBox.value.trim();if(!prompt){statusBox.textContent="Pehle music ka description likho.";promptBox.focus();return}generateBtn.disabled=true;resultBox.hidden=true;statusBox.textContent="Connecting to MusicGen… public queue ke kaaran time lag sakta hai.";try{const client=await Client.connect("facebook/MusicGen");statusBox.textContent="Music generate ho raha hai… please wait.";let result;try{result=await client.predict("/predict",[prompt,null])}catch(e){result=await client.predict(0,[prompt,null])}const url=findAudio(result?.data??result);if(!url)throw new Error("Model ne audio URL return nahi kiya. Public demo ka API badla ho sakta hai.");audioEl.src=url;downloadEl.href=url;resultBox.hidden=false;statusBox.textContent="Track ready — play or download it below."}catch(e){statusBox.textContent="Generation failed: "+(e?.message||"public demo unavailable")+". Try again later, or open the public demo directly.";console.error("AUREX MusicGen:",e)}finally{generateBtn.disabled=false}});
+let currentAudioUrl=null;
+generateBtn.addEventListener("click",async()=>{
+ const prompt=promptBox.value.trim();
+ if(!prompt){statusBox.textContent="Pehle music ka description likho.";promptBox.focus();return}
+ generateBtn.disabled=true;resultBox.hidden=true;
+ if(currentAudioUrl){URL.revokeObjectURL(currentAudioUrl);currentAudioUrl=null}
+ statusBox.textContent="AUREX MusicGen VPS se connect ho raha hai… CPU generation mein kaafi time lag sakta hai.";
+ try{
+  const health=await fetch(API_BASE+"/health",{signal:AbortSignal.timeout(15000)});
+  if(!health.ok)throw new Error("Music API unavailable (HTTP "+health.status+"). VPS API aur tunnel running hone chahiye.");
+  const h=await health.json();
+  if(!h.ok)throw new Error("Music API health check failed.");
+  statusBox.textContent="Music generate ho raha hai… is tab ko khula rakho. CPU par lamba time lag sakta hai.";
+  const response=await fetch(API_BASE+"/api/music",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({prompt,seconds:5}),
+   signal:AbortSignal.timeout(1200000)
+  });
+  if(!response.ok){
+   let detail="HTTP "+response.status;
+   try{const data=await response.json();if(data.detail)detail=String(data.detail)}catch{}
+   throw new Error("Generation failed: "+detail);
+  }
+  const blob=await response.blob();
+  if(!blob.size)throw new Error("API ne empty audio file return ki.");
+  currentAudioUrl=URL.createObjectURL(blob);
+  audioEl.src=currentAudioUrl;downloadEl.href=currentAudioUrl;downloadEl.download="aurex-track.wav";
+  resultBox.hidden=false;statusBox.textContent="Track ready — play or download it below.";
+ }catch(e){
+  console.error("AUREX MusicGen:",e);
+  statusBox.textContent="Music generation failed: "+(e?.message||"Unknown error")+". Confirm the VPS API and temporary tunnel are still running.";
+ }finally{generateBtn.disabled=false}
+});
 </script>
