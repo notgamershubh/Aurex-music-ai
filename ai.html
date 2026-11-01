@@ -11,15 +11,15 @@
 <section class="main"><header class="top"><div style="display:flex;align-items:center;gap:10px"><button class="iconbtn" id="menu" aria-label="Open menu">☰</button><div class="topname">AUREX <span style="color:#999;font-weight:500">AI</span></div></div><div style="display:flex;align-items:center;gap:12px"><span class="tag">✦ Premium interface</span><button id="openMusic" type="button" style="border:1px solid #5c4a2a;background:#282216;color:#f0d99d;border-radius:10px;padding:8px 11px;font-size:12px">♫ AI Music Generator</button></div></header>
 <div class="work" id="work"><section class="chat"><div class="welcome" id="welcome"><h1>What can I help you<br><span class="goldtext">create today?</span></h1><p class="muted">Chat, search, code, create images, explore video ideas, or upload a text file. Everything stays in one conversation.</p><div class="cards"><button class="card" data-prompt="Explain this topic in simple Hindi, with examples."><div class="emoji">✧</div><strong>Learn something</strong><span>Clear answers, step by step</span></button><button class="card" data-prompt="Help me build and debug a coding project. Give me working code and explain where it goes."><div class="emoji">⌘</div><strong>Code with me</strong><span>Build, debug and improve</span></button><button class="card" data-mode="image" data-prompt="Cinematic fantasy landscape with dramatic lighting, intricate details, widescreen composition"><div class="emoji">▧</div><strong>Create an image</strong><span>Turn a prompt into art</span></button><button class="card" data-mode="video" data-prompt="Epic cinematic fantasy video with dramatic camera movement and synchronized music"><div class="emoji">▶</div><strong>Plan a video</strong><span>Scenes, mood and edit plan</span></button></div></div><div class="messages" id="messages"></div></section></div>
 <div class="composer"><div class="modebar"><button class="tool" id="search">⌕ Wikipedia search</button><button class="tool" id="image">▧ Create image</button><button class="tool" id="video">▶ Video studio</button><button class="tool" id="musicOpenSmall">♫ AI Music Generator</button><button class="tool" id="voice">🎙 Voice</button></div><div class="box"><div id="attachments"></div><textarea id="prompt" rows="1" maxlength="8000" placeholder="Message AUREX AI…"></textarea><div class="tools"><div class="lefttools"><div class="menuwrap"><button class="plus" id="plus" aria-label="Add attachment">＋</button><div class="popup" id="popup"><button id="pickFile">▤ &nbsp; Upload a file<small>TXT, MD, CSV, JSON and code files</small></button><button id="pickImage">▧ &nbsp; Add an image<small>Preview it in your chat</small></button><button id="pickAudio">♫ &nbsp; Add audio file<small>Keep it with your message</small></button></div></div><button class="tool" id="read">◖ Read aloud</button><span class="muted" id="modeNote" style="font-size:11px">Ready when you are</span></div><button class="send" id="send" aria-label="Send message">↑</button></div></div><input id="fileInput" type="file" hidden accept=".txt,.md,.csv,.json,.js,.ts,.py,.html,.css,.java,.c,.cpp,.yml,.yaml,.xml,.log,.sql,.sh"><input id="imageInput" type="file" hidden accept="image/*"><input id="audioInput" type="file" hidden accept="audio/*"><div class="hint">AUREX AI can make mistakes. Check important information.</div><div class="status" id="status"></div></div></section></div>
-<div class="music-modal" id="musicModal" role="dialog" aria-modal="true" aria-label="AUREX AI Music Generator"><section class="music-shell"><header class="music-modal-head"><div><strong>♫ AUREX AI MUSIC GENERATOR</strong><span class="music-caption">Self-hosted MusicGen · VPS powered</span></div><div class="music-head-actions"><a class="music-external" href="https://currency-loved-similar-advert.trycloudflare.com/health" target="_blank" rel="noopener noreferrer">Music API status ↗</a><button class="music-close" id="closeMusic" type="button">Close ✕</button></div></header><div class="aurex-music-ui">
+<div class="music-modal" id="musicModal" role="dialog" aria-modal="true" aria-label="AUREX AI Music Generator"><section class="music-shell"><header class="music-modal-head"><div><strong>♫ AUREX AI MUSIC GENERATOR</strong><span class="music-caption">Hosted AI music · no VPS needed</span></div><div class="music-head-actions"><a class="music-external" href="https://currency-loved-similar-advert.trycloudflare.com/health" target="_blank" rel="noopener noreferrer">Music API status ↗</a><button class="music-close" id="closeMusic" type="button">Close ✕</button></div></header><div class="aurex-music-ui">
 <div class="music-hero"><div class="music-orb">♫</div><div><div class="music-eyebrow">AUREX SOUND LAB</div><h2>Turn words into music.</h2><p>Describe a vibe, instruments, genre or scene. We'll generate a short audio clip.</p></div></div>
 <label class="music-label" for="musicPrompt">Describe your music</label>
 <textarea id="musicPrompt" class="music-prompt" maxlength="500" placeholder="Example: Epic Minecraft boss battle soundtrack, powerful drums, dark orchestral strings, intense cinematic energy..." rows="4"></textarea>
 <div class="music-presets"><button type="button" class="music-preset" data-music-prompt="Epic orchestral fantasy soundtrack with powerful drums, heroic brass, dark strings and cinematic tension">⚔️ Epic</button><button type="button" class="music-preset" data-music-prompt="Relaxing lo-fi hip hop beat, warm piano chords, soft vinyl texture, mellow drums, late night study mood">☕ Lo-fi</button><button type="button" class="music-preset" data-music-prompt="Upbeat electronic synthwave with bright analog synths, punchy drums, energetic futuristic atmosphere">⚡ Synthwave</button><button type="button" class="music-preset" data-music-prompt="Peaceful acoustic guitar and soft piano, gentle ambient textures, calm nature-inspired instrumental">🌿 Calm</button></div>
-<div class="music-controls"><span class="music-limit">5-second clip · VPS CPU generation may take time</span><button id="generateMusic" class="music-generate" type="button">♫ Generate Music</button></div>
+<div class="music-controls"><span class="music-limit">30-second instrumental · hosted generation</span><button id="generateMusic" class="music-generate" type="button">♫ Generate Music</button></div>
 <div id="musicStatus" class="music-status" role="status">Ready when you are.</div>
 <div id="musicResult" class="music-result" hidden><div class="music-result-title">YOUR TRACK</div><audio id="musicAudio" controls></audio><a id="musicDownload" class="music-download" download="aurex-track.wav">Download audio ↓</a></div>
-<div class="music-footnote">Powered by the AUREX self-hosted MusicGen API. Keep the VPS and temporary tunnel running.</div>
+<div class="music-footnote">Powered by a hosted music-generation service through AUREX Cloudflare Worker. No VPS required.</div>
 </div></section></div><div class="music-modal" id="videoModal" role="dialog" aria-modal="true" aria-label="AUREX AI Video Generator"><section class="music-shell"><header class="music-modal-head"><div><strong>▶ AUREX AI VIDEO GENERATOR</strong><span class="music-caption">Real text-to-video · free public GPU queue and limits may apply</span></div><button class="music-close" id="closeVideo" type="button">Close ✕</button></header><iframe class="music-frame" id="videoFrame" title="Wan AI video generator" data-src="https://wan-ai-wan2-1.hf.space"></iframe></section></div>
 <script>
 const API="https://aurex-music-ai.factoshubh1080p.workers.dev/api", $=id=>document.getElementById(id);
@@ -114,51 +114,23 @@ $("new").onclick=()=>{messages=[];active=null;render();closeMenu();$("prompt").f
 $("voice").onclick=()=>{let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$("status").textContent="Voice input isn't supported here. Try Chrome.";return}let r=new SR();r.lang="hi-IN";r.onresult=e=>{$("prompt").value+=($("prompt").value?" ":"")+e.results[0][0].transcript;resize()};r.onerror=e=>$("status").textContent="Voice error: "+e.error;r.onstart=()=>$("status").textContent="Listening…";r.onend=()=>$("status").textContent="";r.start()};
 document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{if(b.dataset.mode==="video"){openVideo();return}if(b.dataset.mode)setMode(b.dataset.mode);send(b.dataset.prompt)});document.addEventListener("click",e=>{if(!$("plus").contains(e.target)&&!$("popup").contains(e.target))$("popup").classList.remove("open")});$("menu").onclick=()=>{$("sidebar").classList.add("open");$("overlay").classList.add("show")};function closeMenu(){$("sidebar").classList.remove("open");$("overlay").classList.remove("show")} $("overlay").onclick=closeMenu;document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("new").click()}});
 history();render();if(chats.length)load(chats[0].id);
-</script><script type="module">
-const API_BASE = "https://currency-loved-similar-advert.trycloudflare.com";
-const promptBox=document.getElementById("musicPrompt");
-const generateBtn=document.getElementById("generateMusic");
-const statusBox=document.getElementById("musicStatus");
-const resultBox=document.getElementById("musicResult");
-const audioEl=document.getElementById("musicAudio");
-const downloadEl=document.getElementById("musicDownload");
+</script><scr<script type="module">
+const MUSIC_API = "https://aurex-music-ai.factoshubh1080p.workers.dev/api/ai/music";
+const promptBox=document.getElementById("musicPrompt"),generateBtn=document.getElementById("generateMusic"),statusBox=document.getElementById("musicStatus"),resultBox=document.getElementById("musicResult"),audioEl=document.getElementById("musicAudio"),downloadEl=document.getElementById("musicDownload");
 document.querySelectorAll("[data-music-prompt]").forEach(b=>b.addEventListener("click",()=>{promptBox.value=b.dataset.musicPrompt;promptBox.focus()}));
-let currentAudioUrl=null;
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function readJSON(r){let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||("Request failed (HTTP "+r.status+")."));return d}
 generateBtn.addEventListener("click",async()=>{
- const prompt=promptBox.value.trim();
- if(!prompt){statusBox.textContent="Pehle music ka description likho.";promptBox.focus();return}
- generateBtn.disabled=true;resultBox.hidden=true;
- if(currentAudioUrl){URL.revokeObjectURL(currentAudioUrl);currentAudioUrl=null}
- statusBox.textContent="AUREX MusicGen VPS se connect ho raha hai… CPU generation mein kaafi time lag sakta hai.";
+ const prompt=promptBox.value.trim();if(!prompt){statusBox.textContent="Pehle music ka description likho.";promptBox.focus();return}
+ generateBtn.disabled=true;resultBox.hidden=true;statusBox.textContent="AUREX hosted music service se connect ho raha hai…";
  try{
-  const health=await fetch(API_BASE+"/health",{signal:AbortSignal.timeout(15000)});
-  if(!health.ok)throw new Error("Music API unavailable (HTTP "+health.status+"). VPS API aur tunnel running hone chahiye.");
-  const h=await health.json();
-  if(!h.ok)throw new Error("Music API health check failed.");
-  const modelReady = h.model_loaded ?? h.loaded;
-  if(modelReady === false)throw new Error("Music model is still loading. Wait a little and try again.");
-  statusBox.textContent="Music generate ho raha hai… is tab ko khula rakho. CPU par lamba time lag sakta hai.";
-  const response=await fetch(API_BASE+"/api/music",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({prompt,seconds:5}),
-   signal:AbortSignal.timeout(1200000)
-  });
-  if(!response.ok){
-   let detail="HTTP "+response.status;
-   try{const data=await response.json();if(data.detail)detail=String(data.detail)}catch{}
-   throw new Error("Generation failed: "+detail);
-  }
-  const blob=await response.blob();
-  if(!blob.size)throw new Error("API ne empty audio file return ki.");
-  currentAudioUrl=URL.createObjectURL(blob);
-  audioEl.src=currentAudioUrl;downloadEl.href=currentAudioUrl;downloadEl.download="aurex-track.wav";
-  resultBox.hidden=false;statusBox.textContent="Track ready — play or download it below.";
- }catch(e){
-  console.error("AUREX MusicGen:",e);
-  statusBox.textContent="Music generation failed: "+(e?.message||"Unknown error")+". Confirm the VPS API and temporary tunnel are still running.";
- }finally{generateBtn.disabled=false}
+  const created=await readJSON(await fetch(MUSIC_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,duration:30}),signal:AbortSignal.timeout(30000)}));
+  if(!created.id)throw new Error("Music service ne job ID return nahi ki.");
+  let track=null;
+  for(let i=0;i<150;i++){await sleep(2000);const state=await readJSON(await fetch(MUSIC_API+"?id="+encodeURIComponent(created.id),{signal:AbortSignal.timeout(20000)}));if(state.status==="done"&&state.audio_url){track=state;break}if(state.status==="failed")throw new Error(state.error||"Music generation failed.");statusBox.textContent=state.position?"Music queue mein hai (position "+state.position+")…":"AUREX music generate kar raha hai…"}
+  if(!track)throw new Error("Generation is taking longer than expected. Please try again shortly.");
+  audioEl.src=track.audio_url;downloadEl.href=track.audio_url;downloadEl.download="aurex-track.mp3";resultBox.hidden=false;statusBox.textContent="Track ready — play or download it below.";
+ }catch(e){console.error("AUREX hosted music:",e);statusBox.textContent="Music generation failed: "+(e?.message||"Unknown error")}finally{generateBtn.disabled=false}
 });
-</script>
-</body></html>
+</script>ody></html>
 
